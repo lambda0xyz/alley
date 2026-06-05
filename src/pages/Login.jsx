@@ -14,8 +14,7 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false)
 
   if (!isLoading && session) {
-    navigate(isAdmin ? '/admin' : '/artist', { replace: true })
-    return null
+    return <Navigate to={isAdmin ? '/admin' : '/artist'} replace />
   }
 
   function handleIdentifierSubmit(e) {

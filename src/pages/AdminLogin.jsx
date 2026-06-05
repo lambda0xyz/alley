@@ -11,8 +11,7 @@ export default function AdminLogin() {
   const [submitting, setSubmitting] = useState(false)
 
   if (!isLoading && session) {
-    navigate(isAdmin ? '/admin' : '/artist', { replace: true })
-    return null
+    return <Navigate to={isAdmin ? '/admin' : '/artist'} replace />
   }
 
   async function handleSubmit(e) {
