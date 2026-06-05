@@ -59,7 +59,7 @@ export function AuthProvider({ children }) {
     session,       // the raw Supabase session (null if logged out)
     profile,       // your public.profiles row (has is_admin, display_name)
     isAdmin: profile?.is_admin ?? false,
-    isLoading: session === undefined, // true only during the initial getSession() check
+    isLoading: session === undefined || (session !== null && profile === null), // true only during the initial getSession() check
     signIn,
     signOut,
   }

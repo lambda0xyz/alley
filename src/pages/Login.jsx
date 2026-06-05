@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const PIN_LENGTH = 4
 
 export default function Login() {
   const { signIn, session, isAdmin, isLoading } = useAuth()
-  const navigate = useNavigate()
   const [identifier, setIdentifier] = useState('')
   const [pin, setPin] = useState('')
   const [step, setStep] = useState('identifier') // 'identifier' | 'pin'
