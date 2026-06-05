@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import ArtistDashboard from './pages/ArtistDashboard'
 import AdminDashboard from './pages/AdminDashboard'
+import AdminLogin from './pages/AdminLogin'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -25,6 +26,8 @@ function App() {
               <AdminDashboard />
             </ProtectedRoute>
           } />
+
+          <Route path="/admin/login" element={<AdminLogin />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
