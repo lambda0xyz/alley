@@ -19,36 +19,38 @@ export default function ItemCard({ item, onSell }) {
     setSelling(false)
   }
 
+  const cardClass = [
+    'card',
+    outOfStock && 'card-soldout',
+    lowStock && 'card-warning',
+  ].filter(Boolean).join(' ')
+
   return (
-    <div style={{
-      ...styles.card,
-      ...(outOfStock ? styles.cardSoldOut : {}),
-      ...(lowStock ? styles.cardLowStock : {}),
-    }}>
-      <div style={styles.info}>
-        <span style={styles.name}>{item.name}</span>
-        <span style={styles.price}>¥{Number(item.price).toLocaleString()}</span>
+    <div className={cardClass}>
+      <div className="item-info">
+        <span className="item-name">{item.name}</span>
+        <span className="item-price">¥{Number(item.price).toLocaleString()}</span>
       </div>
 
-      <div style={styles.stock}>
+      <div className="item-stock">
         {outOfStock
-          ? <span style={styles.soldOutLabel}>Sold out</span>
-          : <span style={lowStock ? styles.lowStockLabel : styles.stockLabel}>
+          ? <span className="text-soldout">Sold out</span>
+          : <span className={lowStock ? 'text-warning' : 'text-muted'}>
               {item.quantity_remaining} left
             </span>
         }
       </div>
 
-      {sellError && <p style={styles.error}>{sellError}</p>}
+      {sellError && <p className="text-error">{sellError}</p>}
 
       {!outOfStock && (
         showQuantityPicker ? (
-          <div style={styles.quantityRow}>
+          <div className="item-qty-row">
             {[2, 3, 4, 5].map(n => (
               n <= item.quantity_remaining && (
                 <button
                   key={n}
-                  style={styles.qtyButton}
+                  className="btn btn-ghost btn-qty"
                   onClick={() => handleSell(n)}
                   disabled={selling}
                 >
@@ -57,23 +59,23 @@ export default function ItemCard({ item, onSell }) {
               )
             ))}
             <button
-              style={styles.cancelButton}
+              className="btn btn-ghost btn-qty"
               onClick={() => setShowQuantityPicker(false)}
             >
               Cancel
             </button>
           </div>
         ) : (
-          <div style={styles.actions}>
+          <div className="item-actions">
             <button
-              style={styles.sellButton}
+              className="btn btn-primary btn-sell"
               onClick={() => handleSell(1)}
               disabled={selling}
             >
-              {selling ? '...' : 'Sold 1'}
+              {selling ? '…' : 'Sold 1'}
             </button>
             <button
-              style={styles.multiButton}
+              className="btn btn-ghost"
               onClick={() => setShowQuantityPicker(true)}
               disabled={selling}
             >
@@ -84,98 +86,4 @@ export default function ItemCard({ item, onSell }) {
       )}
     </div>
   )
-}
-
-const styles = {
-  card: {
-    padding: '16px',
-    borderRadius: '12px',
-    border: '1px solid #e0e0e0',
-    background: '#fff',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-  cardLowStock: {
-    borderColor: '#f59e0b',
-    background: '#fffbeb',
-  },
-  cardSoldOut: {
-    borderColor: '#e5e7eb',
-    background: '#f9fafb',
-    opacity: 0.6,
-  },
-  info: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
-  name: {
-    fontWeight: '600',
-    fontSize: '1rem',
-  },
-  price: {
-    fontSize: '0.9rem',
-    color: '#555',
-  },
-  stock: {
-    fontSize: '0.85rem',
-  },
-  stockLabel: { color: '#555' },
-  lowStockLabel: { color: '#d97706', fontWeight: '600' },
-  soldOutLabel: { color: '#9ca3af' },
-  actions: {
-    display: 'flex',
-    gap: '8px',
-  },
-  sellButton: {
-    flex: 1,
-    padding: '14px',
-    fontSize: '1rem',
-    fontWeight: '600',
-    borderRadius: '8px',
-    border: 'none',
-    background: '#000',
-    color: '#fff',
-    cursor: 'pointer',
-    touchAction: 'manipulation',
-  },
-  multiButton: {
-    padding: '14px 16px',
-    fontSize: '0.9rem',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-    background: '#f9f9f9',
-    cursor: 'pointer',
-    touchAction: 'manipulation',
-  },
-  quantityRow: {
-    display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap',
-  },
-  qtyButton: {
-    flex: 1,
-    padding: '12px',
-    fontSize: '1rem',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-    background: '#f0f0f0',
-    cursor: 'pointer',
-    touchAction: 'manipulation',
-  },
-  cancelButton: {
-    flex: 1,
-    padding: '12px',
-    fontSize: '0.9rem',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-    background: '#fff',
-    cursor: 'pointer',
-  },
-  error: {
-    color: 'red',
-    fontSize: '0.8rem',
-    margin: 0,
-  },
 }

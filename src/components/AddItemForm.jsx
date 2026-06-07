@@ -26,18 +26,18 @@ export default function AddItemForm({ onAdd, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
+    <form onSubmit={handleSubmit} className="add-form">
       <input
-        style={styles.input}
+        className="input"
         placeholder="Item name"
         value={name}
         onChange={e => setName(e.target.value)}
         required
         autoFocus
       />
-      <div style={styles.row}>
+      <div className="form-row">
         <input
-          style={styles.input}
+          className="input"
           placeholder="Price"
           type="number"
           min="0"
@@ -47,7 +47,7 @@ export default function AddItemForm({ onAdd, onCancel }) {
           required
         />
         <input
-          style={styles.input}
+          className="input"
           placeholder="Quantity"
           type="number"
           min="1"
@@ -57,62 +57,15 @@ export default function AddItemForm({ onAdd, onCancel }) {
           required
         />
       </div>
-      {error && <p style={styles.error}>{error}</p>}
-      <div style={styles.row}>
-        <button style={styles.submitButton} type="submit" disabled={submitting}>
+      {error && <p className="text-error">{error}</p>}
+      <div className="form-row">
+        <button className="btn btn-primary" type="submit" disabled={submitting}>
           {submitting ? 'Adding…' : 'Add item'}
         </button>
-        <button style={styles.cancelButton} type="button" onClick={onCancel}>
+        <button className="btn btn-ghost" type="button" onClick={onCancel}>
           Cancel
         </button>
       </div>
     </form>
   )
-}
-
-const styles = {
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    padding: '16px',
-    border: '1px dashed #ccc',
-    borderRadius: '12px',
-    background: '#fafafa',
-  },
-  row: {
-    display: 'flex',
-    gap: '8px',
-  },
-  input: {
-    flex: 1,
-    padding: '12px',
-    fontSize: '1rem',
-    borderRadius: '8px',
-    border: '1px solid #ccc',
-  },
-  error: {
-    color: 'red',
-    fontSize: '0.8rem',
-    margin: 0,
-  },
-  submitButton: {
-    flex: 1,
-    padding: '12px',
-    fontSize: '1rem',
-    borderRadius: '8px',
-    border: 'none',
-    background: '#000',
-    color: '#fff',
-    cursor: 'pointer',
-  },
-  cancelButton: {
-    flex: 1,
-    padding: '12px',
-    fontSize: '1rem',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-    background: '#fff',
-    cursor: 'pointer',
-  },
 }

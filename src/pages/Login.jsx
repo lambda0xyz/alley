@@ -28,7 +28,6 @@ export default function Login() {
     const next = pin + digit
     setPin(next)
 
-    // Auto-submit when PIN reaches full length
     if (next.length === PIN_LENGTH) {
       await submitLogin(next)
     }
@@ -50,7 +49,6 @@ export default function Login() {
       setError('Wrong PIN. Try again.')
       setPin('')
       setSubmitting(false)
-      return
     }
     // onAuthStateChange handles the redirect
   }
@@ -62,165 +60,76 @@ export default function Login() {
   }
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>alley</h1>
+    <div className="page-center">
+      <div className="page-center-inner">
+        <h1 className="brand-title">alley</h1>
 
-      {step === 'identifier' ? (
-        <form onSubmit={handleIdentifierSubmit} style={styles.form}>
-          <label style={styles.label}>Your name or table number</label>
-          <input
-            style={styles.input}
-            type="text"
-            value={identifier}
-            onChange={e => setIdentifier(e.target.value)}
-            placeholder="e.g. table12 or sakura"
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoFocus
-          />
-          <button
-            style={styles.continueButton}
-            type="submit"
-            disabled={!identifier.trim()}
-          >
-            Continue
-          </button>
-        </form>
-      ) : (
-        <div style={styles.pinContainer}>
-          <p style={styles.label}>PIN for <strong>{identifier}</strong></p>
+        {step === 'identifier' ? (
+          <form onSubmit={handleIdentifierSubmit} className="form-stack form-narrow">
+            <label className="form-label">Your name or table number</label>
+            <input
+              className="input input-center"
+              type="text"
+              value={identifier}
+              onChange={e => setIdentifier(e.target.value)}
+              placeholder="e.g. table12 or sakura"
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoFocus
+            />
+            <button
+              className="btn btn-primary btn-full"
+              type="submit"
+              disabled={!identifier.trim()}
+            >
+              Continue
+            </button>
+          </form>
+        ) : (
+          <div className="pin-wrap">
+            <p className="form-label">PIN for <strong>{identifier}</strong></p>
 
-          {/* PIN dots */}
-          <div style={styles.dots}>
-            {Array.from({ length: PIN_LENGTH }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  ...styles.dot,
-                  background: i < pin.length ? '#000' : 'transparent'
-                }}
-              />
-            ))}
-          </div>
+            <div className="pin-dots">
+              {Array.from({ length: PIN_LENGTH }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`pin-dot${i < pin.length ? ' pin-dot-filled' : ''}`}
+                />
+              ))}
+            </div>
 
-          {error && <p style={styles.error}>{error}</p>}
+            {error && <p className="text-error">{error}</p>}
 
-          {/* Number pad */}
-          <div style={styles.pad}>
-            {[1,2,3,4,5,6,7,8,9].map(n => (
+            <div className="pin-pad">
+              {[1,2,3,4,5,6,7,8,9].map(n => (
+                <button
+                  key={n}
+                  className="pin-btn"
+                  onClick={() => handlePinDigit(String(n))}
+                  disabled={pin.length === PIN_LENGTH || submitting}
+                >
+                  {n}
+                </button>
+              ))}
+              <button className="pin-btn" onClick={handleBack}>←</button>
               <button
-                key={n}
-                style={styles.padButton}
-                onClick={() => handlePinDigit(String(n))}
+                className="pin-btn"
+                onClick={() => handlePinDigit('0')}
                 disabled={pin.length === PIN_LENGTH || submitting}
               >
-                {n}
+                0
               </button>
-            ))}
-            <button style={styles.padButton} onClick={handleBack}>←</button>
-            <button
-              style={styles.padButton}
-              onClick={() => handlePinDigit('0')}
-              disabled={pin.length === PIN_LENGTH || submitting}
-            >
-              0
-            </button>
-            <button
-              style={styles.padButton}
-              onClick={handleBackspace}
-              disabled={!pin.length || submitting}
-            >
-              ⌫
-            </button>
+              <button
+                className="pin-btn"
+                onClick={handleBackspace}
+                disabled={!pin.length || submitting}
+              >
+                ⌫
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
-}
-
-// Inline styles — just enough to make the PIN pad usable on mobile.
-// Will be replaced with proper styling in a later step.
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '100vh',
-    padding: '24px',
-    boxSizing: 'border-box',
-  },
-  title: {
-    fontSize: '2rem',
-    marginBottom: '32px',
-    letterSpacing: '0.1em',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    width: '100%',
-    maxWidth: '320px',
-  },
-  label: {
-    fontSize: '0.9rem',
-    textAlign: 'center',
-    marginBottom: '8px',
-  },
-  input: {
-    padding: '14px',
-    fontSize: '1.1rem',
-    borderRadius: '8px',
-    border: '1px solid #ccc',
-    textAlign: 'center',
-  },
-  continueButton: {
-    padding: '14px',
-    fontSize: '1rem',
-    borderRadius: '8px',
-    border: 'none',
-    background: '#000',
-    color: '#fff',
-    cursor: 'pointer',
-  },
-  pinContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '16px',
-    width: '100%',
-    maxWidth: '320px',
-  },
-  dots: {
-    display: 'flex',
-    gap: '16px',
-    margin: '16px 0',
-  },
-  dot: {
-    width: '16px',
-    height: '16px',
-    borderRadius: '50%',
-    border: '2px solid #000',
-  },
-  error: {
-    color: 'red',
-    fontSize: '0.85rem',
-    margin: 0,
-  },
-  pad: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '12px',
-    width: '100%',
-  },
-  padButton: {
-    padding: '20px',
-    fontSize: '1.4rem',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-    background: '#f9f9f9',
-    cursor: 'pointer',
-    touchAction: 'manipulation', // prevents 300ms tap delay on mobile
-  },
 }
