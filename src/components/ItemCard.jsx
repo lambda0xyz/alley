@@ -29,7 +29,7 @@ export default function ItemCard({ item, onSell }) {
     <div className={cardClass}>
       <div className="item-info">
         <span className="item-name">{item.name}</span>
-        <span className="item-price">¥{Number(item.price).toLocaleString()}</span>
+        <span className="item-price">RON {Number(item.price).toLocaleString()}</span>
       </div>
 
       <div className="item-stock">
