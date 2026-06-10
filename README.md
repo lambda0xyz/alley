@@ -1,41 +1,36 @@
-<div align="center">
-  <img src="public/logo.png" alt="alley" width="200" />
+# alley
 
-  <p><strong>A mobile-first inventory & sales tracker for artists at anime/doujin conventions.</strong></p>
-</div>
+A mobile-first inventory and sales tracker for artists at anime/doujin conventions.
 
----
-
-Artists log in on their phones and tap to mark items sold from a busy table. Admins watch a
-live dashboard across every artist and export a formatted Excel report when the convention
-wraps up.
+Artists log in on their phones and mark items sold from their table. Admins see a dashboard
+across all artists and can export an Excel report at the end of the convention.
 
 ## Features
 
-- **Fast artist checkout** — large thumb-friendly "Sold" buttons, multi-sell (×2–×5), and
-  optimistic UI that feels instant on flaky convention WiFi.
-- **Inventory management** — artists add, edit, and delete their own items, with optional
-  product photos (compressed client-side before upload).
-- **Sale corrections** — mistakes are fixed with an append-only correction entry, never a
-  silent delete, so the sales record stays an honest audit trail.
-- **Live admin dashboard** — real-time revenue, items sold, and per-artist breakdowns that
-  update the moment a sale is recorded.
-- **Excel export** — one-click `.xlsx` report with a summary sheet plus a sheet per artist.
-- **Resilient by design** — top-level error boundary and hardened async paths that roll back
-  and show a friendly message on network or session failure.
+- Artist checkout: "Sold" buttons sized for one-handed use, multi-sell (×2–×5), and
+  optimistic updates so it stays responsive on slow convention WiFi.
+- Inventory: artists add, edit, and delete their own items, with optional product photos
+  (compressed in the browser before upload).
+- Sale corrections: mistakes are fixed with an append-only correction entry rather than a
+  delete, so the sales record stays intact.
+- Admin dashboard: live revenue, items sold, and per-artist breakdowns that update as sales
+  come in.
+- Excel export: one-click `.xlsx` with a summary sheet plus a sheet per artist.
+- Error handling: a top-level error boundary and async paths that roll back and show a
+  message on network or session failure.
 
 ## Tech stack
 
-- **Frontend:** React 19 + Vite, React Router
-- **Backend:** [Supabase](https://supabase.com) — Postgres, Auth, Realtime, and Storage
-- **Export:** SheetJS (`xlsx`), lazy-loaded so it stays out of the main bundle
-- **Hosting:** Cloudflare Workers (static assets), auto-deployed on push to `main`
+- Frontend: React 19 + Vite, React Router
+- Backend: [Supabase](https://supabase.com) — Postgres, Auth, Realtime, and Storage
+- Export: SheetJS (`xlsx`), lazy-loaded so it stays out of the main bundle
+- Hosting: Cloudflare Workers (static assets), deployed on push to `main`
 
 ## Getting started
 
 > [!NOTE]
 > The app needs a Supabase project (database schema, auth, and a storage bucket) to run.
-> A full self-hosting guide is coming — for now this covers the local dev loop against an
+> A full setup guide is still to come — for now this covers the local dev loop against an
 > existing Supabase project.
 
 ```bash
