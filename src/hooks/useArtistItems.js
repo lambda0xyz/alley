@@ -32,6 +32,9 @@ export function useArtistItems() {
   }, [])
 
   useEffect(() => {
+    // Fetch-on-mount: fetchItems owns its own loading/error state. The synchronous
+    // setLoading(true) is intentional, not a cascading-render bug.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchItems()
   }, [fetchItems])
 

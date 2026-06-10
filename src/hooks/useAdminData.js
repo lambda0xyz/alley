@@ -51,6 +51,8 @@ export function useAdminData() {
   }, [])
 
   useEffect(() => {
+    // Fetch-on-mount plus a realtime subscription; fetchAll owns its loading state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll()
 
     // Real-time: re-fetch whenever items or sales change

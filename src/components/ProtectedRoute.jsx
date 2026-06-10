@@ -11,11 +11,9 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
   }
 
   if (!session) {
-    if (!session) {
-      // If trying to access /admin, send to admin login
-      const isAdminRoute = window.location.pathname.startsWith('/admin')
-      return <Navigate to={isAdminRoute ? '/admin/login' : '/login'} replace />
-    }
+    // If trying to access /admin, send to admin login
+    const isAdminRoute = window.location.pathname.startsWith('/admin')
+    return <Navigate to={isAdminRoute ? '/admin/login' : '/login'} replace />
   }
 
   if (adminOnly && !isAdmin) {

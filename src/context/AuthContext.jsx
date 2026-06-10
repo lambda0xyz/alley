@@ -71,7 +71,10 @@ export function AuthProvider({ children }) {
   )
 }
 
-// Custom hook — components call useAuth() instead of useContext(AuthContext) directly
+// Custom hook — components call useAuth() instead of useContext(AuthContext) directly.
+// Co-located with the provider by design; the only fast-refresh cost is this file
+// reloading fully on edit, which is fine for a context module.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used inside AuthProvider')

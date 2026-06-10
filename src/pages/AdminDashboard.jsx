@@ -1,11 +1,27 @@
+import { useState } from 'react'
 import { useAdminData } from '../hooks/useAdminData'
 import AdminArtistCard from '../components/AdminArtistCard'
 import ActivityLog from '../components/ActivityLog'
 import SignOutButton from '../components/SignOutButton'
-import { exportConventionReport } from '../lib/exportExcel'
 
 export default function AdminDashboard() {
   const { artists, loading, error } = useAdminData()
+  const [exporting, setExporting] = useState(false)
+
+  // The xlsx library is ~500 kB, only needed for this one action. Loading it
+  // lazily keeps it out of the bundle artists download on their phones.
+  async function handleExport() {
+    setExporting(true)
+    try {
+      const { exportConventionReport } = await import('../lib/exportExcel')
+      exportConventionReport(artists)
+    } catch (err) {
+      console.error('Excel export failed:', err)
+      alert("Couldn't generate the report — please try again.")
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const totalRevenue = artists.reduce((sum, artist) =>
     sum + artist.items.reduce((s, item) => {
@@ -55,9 +71,10 @@ export default function AdminDashboard() {
 
       <button
         className="btn btn-ghost btn-full"
-        onClick={() => exportConventionReport(artists)}
+        onClick={handleExport}
+        disabled={exporting}
       >
-        Export Excel report
+        {exporting ? 'Generating…' : 'Export Excel report'}
       </button>
     </div>
   )
