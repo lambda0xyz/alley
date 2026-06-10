@@ -104,6 +104,12 @@ export function useArtistItems() {
       quantity_remaining: newRemaining,
     }
 
+    // Only touch image_url when the edit supplied a new one (a fresh upload).
+    // Leaving it out preserves the existing photo.
+    if (fields.image_url !== undefined) {
+      updates.image_url = fields.image_url
+    }
+
     const rollback = () => setItems(prev => prev.map(i => (i.id === itemId ? item : i)))
     setItems(prev => prev.map(i => (i.id === itemId ? { ...i, ...updates } : i)))
 

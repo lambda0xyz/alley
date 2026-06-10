@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { uploadItemImage } from '../lib/uploadImage'
 
 const LOW_STOCK_THRESHOLD = 2
 
@@ -13,6 +14,8 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
   const [editName, setEditName] = useState(item.name)
   const [editPrice, setEditPrice] = useState(String(item.price))
   const [editQty, setEditQty] = useState(String(item.quantity_total))
+  const [editImageFile, setEditImageFile] = useState(null)
+  const [editPreviewUrl, setEditPreviewUrl] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const outOfStock = item.quantity_remaining === 0
@@ -70,10 +73,28 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
     setActionError(null)
   }
 
+  function clearEditPreview() {
+    setEditImageFile(null)
+    setEditPreviewUrl(prev => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
+  }
+
+  function handleEditFileChange(e) {
+    const file = e.target.files?.[0] ?? null
+    setEditImageFile(file)
+    setEditPreviewUrl(prev => {
+      if (prev) URL.revokeObjectURL(prev)
+      return file ? URL.createObjectURL(file) : null
+    })
+  }
+
   function openEdit() {
     setEditName(item.name)
     setEditPrice(String(item.price))
     setEditQty(String(item.quantity_total))
+    clearEditPreview()
     setConfirmDelete(false)
     setActionError(null)
     setShowEdit(true)
@@ -81,6 +102,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
 
   function closeEdit() {
     setShowEdit(false)
+    clearEditPreview()
     setConfirmDelete(false)
     setActionError(null)
   }
@@ -124,11 +146,26 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
 
     setBusy(true)
     setActionError(null)
-    const { error } = await onEdit(item.id, { name, price, quantity_total: total })
+
+    // Replace the photo only if a new one was picked; otherwise leave image_url
+    // untouched (the hook omits it from the update when undefined).
+    const fields = { name, price, quantity_total: total }
+    if (editImageFile) {
+      const { url, error: uploadError } = await uploadItemImage(editImageFile)
+      if (uploadError) {
+        setActionError(uploadError.message)
+        setBusy(false)
+        return
+      }
+      fields.image_url = url
+    }
+
+    const { error } = await onEdit(item.id, fields)
     if (error) {
       setActionError(error.message)
     } else {
       setShowEdit(false)
+      clearEditPreview()
     }
     setBusy(false)
   }
@@ -146,6 +183,14 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
 
   return (
     <div className={cardClass}>
+      {item.image_url && (
+        <img
+          className="item-thumb"
+          src={item.image_url}
+          alt={item.name}
+          loading="lazy"
+        />
+      )}
       <div className="item-info">
         <span className="item-name">{item.name}</span>
         <span className="item-price">RON {Number(item.price).toFixed(2)}</span>
@@ -206,6 +251,25 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
             <p className="text-muted item-edit-hint">
               Price is locked — {soldCount} already sold
             </p>
+          )}
+          <label className="field">
+            <span className="field-label">
+              {item.image_url ? 'Replace photo' : 'Add photo'}
+            </span>
+            <input
+              className="input"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleEditFileChange}
+            />
+          </label>
+          {(editPreviewUrl || item.image_url) && (
+            <img
+              className="item-thumb item-thumb-preview"
+              src={editPreviewUrl || item.image_url}
+              alt="Preview"
+            />
           )}
           <div className="form-row">
             <button className="btn btn-primary" type="submit" disabled={busy}>

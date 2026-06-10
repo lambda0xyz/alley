@@ -312,6 +312,20 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 
 /* ===== ITEM CARD ===== */
 .item-list { display: flex; flex-direction: column; gap: 10px; }
+
+/* Product photo: full card width, fixed aspect so cards stay uniform. */
+.item-thumb {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background: var(--border);
+  display: block;
+}
+
+/* Smaller preview shown inside add/edit forms before saving. */
+.item-thumb-preview { height: 120px; }
+
 .item-info { display: flex; justify-content: space-between; align-items: baseline; }
 .item-name { font-weight: 600; font-size: 1rem; color: var(--text); }
 .item-price { font-size: 0.9rem; color: var(--text-muted); }
