@@ -27,7 +27,7 @@ export default function AdminArtistCard({ artist }) {
         <span className="artist-name">{artist.display_name}</span>
         <div className="artist-header-stats">
           <span className="artist-stat">
-            <strong>RON {totalRevenue.toLocaleString()}</strong>
+            <strong>RON {totalRevenue.toFixed(2)}</strong>
             <small> revenue</small>
           </span>
           <span className="artist-stat">
@@ -60,12 +60,12 @@ export default function AdminArtistCard({ artist }) {
                     <div className="artist-item-left">
                       <span className="artist-item-name">{item.name}</span>
                       <span className="artist-item-price">
-                        RON {Number(item.price).toLocaleString()}
+                        RON {Number(item.price).toFixed(2)}
                       </span>
                     </div>
                     <div className="artist-item-right">
                       <span className="artist-item-revenue">
-                        RON {revenue.toLocaleString()}
+                        RON {revenue.toFixed(2)}
                       </span>
                       <span className="artist-item-sold">{sold} sold</span>
                       <span className={`artist-item-remaining ${remainingClass}`}>

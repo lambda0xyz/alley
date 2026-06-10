@@ -25,29 +25,43 @@ export function useArtistItems() {
     fetchItems()
   }, [fetchItems])
 
-  async function sellItem(itemId, quantity = 1) {
-    // Optimistic update — change the count immediately in UI
+  // Records a sale row and optimistically adjusts the displayed stock.
+  // A positive quantity_sold is a sale (stock down); a negative one is a
+  // correction (stock back up). The DB trigger does remaining - quantity_sold,
+  // so the optimistic math here mirrors it.
+  async function recordSale(itemId, quantitySold, notes = null) {
     setItems(prev => prev.map(item =>
       item.id === itemId
-        ? { ...item, quantity_remaining: item.quantity_remaining - quantity }
+        ? { ...item, quantity_remaining: item.quantity_remaining - quantitySold }
         : item
     ))
 
     const { error } = await supabase
       .from('sales')
-      .insert({ item_id: itemId, quantity_sold: quantity })
+      .insert({ item_id: itemId, quantity_sold: quantitySold, notes })
 
     if (error) {
       // Roll back on failure
       setItems(prev => prev.map(item =>
         item.id === itemId
-          ? { ...item, quantity_remaining: item.quantity_remaining + quantity }
+          ? { ...item, quantity_remaining: item.quantity_remaining + quantitySold }
           : item
       ))
       return { error }
     }
 
     return { error: null }
+  }
+
+  function sellItem(itemId, quantity = 1) {
+    return recordSale(itemId, quantity)
+  }
+
+  // A correction reverses an over-counted sale by inserting a negative row.
+  // The note explains why; it falls back to 'correction' when left blank.
+  function correctItem(itemId, quantity, note) {
+    const trimmed = note?.trim()
+    return recordSale(itemId, -quantity, trimmed || 'correction')
   }
 
   async function addItem(fields) {
@@ -67,5 +81,5 @@ export function useArtistItems() {
     return { error: null }
   }
 
-  return { items, loading, error, sellItem, addItem, refetch: fetchItems }
+  return { items, loading, error, sellItem, correctItem, addItem, refetch: fetchItems }
 }

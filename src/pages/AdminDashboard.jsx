@@ -31,7 +31,7 @@ export default function AdminDashboard() {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <span className="stat-value">RON {totalRevenue.toLocaleString()}</span>
+          <span className="stat-value">RON {totalRevenue.toFixed(2)}</span>
           <span className="stat-label">Total revenue</span>
         </div>
         <div className="stat-card">

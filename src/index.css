@@ -295,6 +295,24 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 .item-stock { font-size: 0.875rem; }
 .item-actions { display: flex; gap: 8px; }
 .item-qty-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.item-correction { display: flex; flex-direction: column; gap: 8px; }
+
+/* Low-emphasis, full-width entry point for the correction flow */
+.btn-correct {
+  align-self: flex-start;
+  padding: 4px 0;
+  font-size: 0.8rem;
+  font-family: inherit;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.btn-correct:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ===== ADD ITEM FORM ===== */
 .add-form {

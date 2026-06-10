@@ -7,7 +7,7 @@ import SignOutButton from '../components/SignOutButton'
 
 export default function ArtistDashboard() {
   const { profile } = useAuth()
-  const { items, loading, error, sellItem, addItem } = useArtistItems()
+  const { items, loading, error, sellItem, correctItem, addItem } = useArtistItems()
   const [showAddForm, setShowAddForm] = useState(false)
 
   async function handleAddItem(fields) {
@@ -28,7 +28,7 @@ export default function ArtistDashboard() {
 
       <div className="item-list">
         {items.map(item => (
-          <ItemCard key={item.id} item={item} onSell={sellItem} />
+          <ItemCard key={item.id} item={item} onSell={sellItem} onCorrect={correctItem} />
         ))}
       </div>
 

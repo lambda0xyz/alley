@@ -14,7 +14,7 @@ export default function AddItemForm({ onAdd, onCancel }) {
 
     const { error } = await onAdd({
       name: name.trim(),
-      price: parseFloat(price),
+      price: Math.round(parseFloat(price) * 100) / 100,
       quantity_total: parseInt(quantity),
     })
 
