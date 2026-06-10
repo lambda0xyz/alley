@@ -113,8 +113,9 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 
 /* ===== BRAND ===== */
 .brand-logo {
-  width: 96px;
-  height: 96px;
+  width: 200px;
+  max-width: 60vw;
+  height: auto;
   object-fit: contain;
   margin: 0 0 16px;
 }
