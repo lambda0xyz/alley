@@ -1,6 +1,6 @@
 # alley
 
-A mobile-first inventory and sales tracker for artists at anime/doujin conventions.
+A mobile-first inventory and sales tracker for artists and organizers at anime/comic/fandom conventions.
 
 Artists log in on their phones and mark items sold from their table. Admins see a dashboard
 across all artists and can export an Excel report at the end of the convention.
