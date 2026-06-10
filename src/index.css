@@ -112,6 +112,13 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 .admin-title { font-weight: 700; font-size: 1.1rem; }
 
 /* ===== BRAND ===== */
+.brand-logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  margin: 0 0 16px;
+}
+
 .brand-title {
   font-size: 2.25rem;
   font-weight: 800;
@@ -245,6 +252,16 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 .text-muted { color: var(--text-muted); }
 .text-warning { color: var(--warning-text); font-weight: 600; }
 .text-soldout { color: var(--muted-text); }
+
+/* Link to switch between the artist and admin login pages */
+.auth-switch {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 /* ===== PIN PAD ===== */
 .pin-wrap {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const PIN_LENGTH = 4
@@ -62,6 +62,7 @@ export default function Login() {
   return (
     <div className="page-center">
       <div className="page-center-inner">
+        <img src="/logo.png" alt="" className="brand-logo" />
         <h1 className="brand-title">alley</h1>
 
         {step === 'identifier' ? (
@@ -84,6 +85,7 @@ export default function Login() {
             >
               Continue
             </button>
+            <Link to="/admin/login" className="auth-switch">…or go to Admin Login</Link>
           </form>
         ) : (
           <div className="pin-wrap">

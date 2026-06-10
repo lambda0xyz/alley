@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function AdminLogin() {
@@ -53,6 +53,7 @@ export default function AdminLogin() {
           <button className="btn btn-primary btn-full" type="submit" disabled={submitting}>
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>
+          <Link to="/login" className="auth-switch">…or go to Artist Login</Link>
         </form>
       </div>
     </div>
