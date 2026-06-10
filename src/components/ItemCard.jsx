@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { uploadItemImage } from '../lib/uploadImage'
 
 const LOW_STOCK_THRESHOLD = 2
@@ -17,6 +17,17 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
   const [editImageFile, setEditImageFile] = useState(null)
   const [editPreviewUrl, setEditPreviewUrl] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showImage, setShowImage] = useState(false)
+
+  // Close the full-image lightbox on Escape, alongside tap-to-close.
+  useEffect(() => {
+    if (!showImage) return
+    function onKey(e) {
+      if (e.key === 'Escape') setShowImage(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showImage])
 
   const outOfStock = item.quantity_remaining === 0
   const lowStock = item.quantity_remaining <= LOW_STOCK_THRESHOLD && !outOfStock
@@ -184,12 +195,19 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
   return (
     <div className={cardClass}>
       {item.image_url && (
-        <img
-          className="item-thumb"
-          src={item.image_url}
-          alt={item.name}
-          loading="lazy"
-        />
+        <button
+          type="button"
+          className="item-thumb-btn"
+          onClick={() => setShowImage(true)}
+          aria-label={`View photo of ${item.name}`}
+        >
+          <img
+            className="item-thumb"
+            src={item.image_url}
+            alt={item.name}
+            loading="lazy"
+          />
+        </button>
       )}
       <div className="item-info">
         <span className="item-name">{item.name}</span>
@@ -418,6 +436,17 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
             </div>
           )}
         </>
+      )}
+
+      {showImage && item.image_url && (
+        <div
+          className="lightbox"
+          role="dialog"
+          aria-label={`Photo of ${item.name}`}
+          onClick={() => setShowImage(false)}
+        >
+          <img className="lightbox-img" src={item.image_url} alt={item.name} />
+        </div>
       )}
     </div>
   )
