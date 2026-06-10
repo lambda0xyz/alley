@@ -1,5 +1,6 @@
 import { useAdminData } from '../hooks/useAdminData'
 import AdminArtistCard from '../components/AdminArtistCard'
+import ActivityLog from '../components/ActivityLog'
 import SignOutButton from '../components/SignOutButton'
 import { exportConventionReport } from '../lib/exportExcel'
 
@@ -43,6 +44,8 @@ export default function AdminDashboard() {
           <span className="stat-label">Artists</span>
         </div>
       </div>
+
+      <ActivityLog artists={artists} />
 
       <div className="artist-list">
         {artists.map(artist => (

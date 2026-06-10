@@ -168,6 +168,7 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 
 .btn-primary { background: var(--primary); color: var(--primary-fg); }
 .btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
+.btn-danger { background: var(--error); color: #fff; }
 .btn-full { width: 100%; }
 
 .btn-sell {
@@ -235,6 +236,10 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 .form-row { display: flex; gap: 8px; }
 .form-label { font-size: 0.875rem; color: var(--text-muted); text-align: center; }
 
+/* Labelled field inside a form-row: small title stacked above its input */
+.field { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: 0.75rem; color: var(--text-muted); }
+
 /* ===== TEXT UTILITIES ===== */
 .text-error { color: var(--error); font-size: 0.85rem; }
 .text-muted { color: var(--text-muted); }
@@ -292,7 +297,7 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 .item-info { display: flex; justify-content: space-between; align-items: baseline; }
 .item-name { font-weight: 600; font-size: 1rem; color: var(--text); }
 .item-price { font-size: 0.9rem; color: var(--text-muted); }
-.item-stock { font-size: 0.875rem; }
+.item-stock { font-size: 0.875rem; display: flex; justify-content: space-between; align-items: baseline; }
 .item-actions { display: flex; gap: 8px; }
 .item-qty-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .item-correction { display: flex; flex-direction: column; gap: 8px; }
@@ -313,6 +318,35 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 }
 
 .btn-correct:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.item-edit-row { display: flex; gap: 16px; }
+.item-edit-hint { font-size: 0.75rem; margin: 0; }
+
+/* Delete lives at the foot of the edit form, separated from the save action */
+.item-delete {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-delete {
+  align-self: flex-start;
+  padding: 4px 0;
+  font-size: 0.8rem;
+  font-family: inherit;
+  background: none;
+  border: none;
+  color: var(--error);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.btn-delete:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ===== ADD ITEM FORM ===== */
 .add-form {
@@ -381,16 +415,30 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 
 .artist-items { border-top: 1px solid var(--border); }
 
+.artist-item { border-bottom: 1px solid var(--border); }
+.artist-item:last-child { border-bottom: none; }
+
 .artist-item-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
   gap: 8px;
 }
 
-.artist-item-row:last-child { border-bottom: none; }
+/* An item row that opens its sale history is a button; strip the defaults
+   and make it span the full width like the plain rows. */
+.artist-item-row-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.artist-item-row-toggle:active { background: var(--muted-bg); }
 
 .artist-item-left { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .artist-item-name { font-size: 0.95rem; font-weight: 500; color: var(--text); }
@@ -399,4 +447,87 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
 .artist-item-revenue { font-weight: 600; color: var(--text); }
 .artist-item-sold { color: var(--text-muted); }
 .artist-item-remaining { min-width: 40px; text-align: right; }
+.artist-item-chevron { font-size: 0.6rem; color: var(--text-muted); }
 .artist-empty { padding: 12px 16px; color: var(--text-muted); font-size: 0.85rem; }
+
+/* ===== SALE LOG (per-item history) ===== */
+.sale-log {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 16px 10px 16px;
+  background: var(--muted-bg);
+}
+
+.sale-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 0.8rem;
+}
+
+.sale-qty {
+  font-weight: 600;
+  color: var(--text);
+  min-width: 28px;
+}
+
+.sale-qty-correction { color: var(--warning-text); }
+
+.sale-time { color: var(--text-muted); flex-shrink: 0; }
+
+.sale-note {
+  color: var(--text-muted);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== ACTIVITY LOG (global recent feed) ===== */
+.activity {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-title { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+.activity-count { font-size: 0.75rem; color: var(--text-muted); }
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.activity-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-row:last-child { border-bottom: none; }
+
+.activity-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-item-name { font-size: 0.9rem; font-weight: 500; color: var(--text); }
+.activity-artist { font-size: 0.75rem; color: var(--text-muted); }

@@ -2,13 +2,18 @@ import { useState } from 'react'
 
 const LOW_STOCK_THRESHOLD = 2
 
-export default function ItemCard({ item, onSell, onCorrect }) {
+export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) {
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState(null)
   const [showQuantityPicker, setShowQuantityPicker] = useState(false)
   const [showCorrection, setShowCorrection] = useState(false)
   const [correctQty, setCorrectQty] = useState('')
   const [correctNote, setCorrectNote] = useState('')
+  const [showEdit, setShowEdit] = useState(false)
+  const [editName, setEditName] = useState(item.name)
+  const [editPrice, setEditPrice] = useState(String(item.price))
+  const [editQty, setEditQty] = useState(String(item.quantity_total))
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const outOfStock = item.quantity_remaining === 0
   const lowStock = item.quantity_remaining <= LOW_STOCK_THRESHOLD && !outOfStock
@@ -16,6 +21,14 @@ export default function ItemCard({ item, onSell, onCorrect }) {
   // How many units have been sold so far — the most a correction can reverse
   // without pushing remaining back above the original total (qty_check).
   const soldCount = item.quantity_total - item.quantity_remaining
+
+  // Price is captured live from the item, never snapshotted on each sale, so
+  // editing it after a sale would rewrite past revenue. Lock it once anything sells.
+  const priceLocked = soldCount > 0
+
+  // Deleting an item with sales would destroy revenue history (and the DB's
+  // ON DELETE RESTRICT would reject it anyway). Only allow it before any sale.
+  const canDelete = soldCount === 0
 
   async function handleSell(quantity) {
     setBusy(true)
@@ -57,9 +70,77 @@ export default function ItemCard({ item, onSell, onCorrect }) {
     setActionError(null)
   }
 
+  function openEdit() {
+    setEditName(item.name)
+    setEditPrice(String(item.price))
+    setEditQty(String(item.quantity_total))
+    setConfirmDelete(false)
+    setActionError(null)
+    setShowEdit(true)
+  }
+
+  function closeEdit() {
+    setShowEdit(false)
+    setConfirmDelete(false)
+    setActionError(null)
+  }
+
+  async function handleDelete() {
+    setBusy(true)
+    setActionError(null)
+    const { error } = await onDelete(item.id)
+    if (error) {
+      // On success the parent drops this item and the card unmounts, so we
+      // only need to recover from the failure path.
+      setActionError(error.message)
+      setConfirmDelete(false)
+      setBusy(false)
+    }
+  }
+
+  async function handleEdit(e) {
+    e.preventDefault()
+
+    const name = editName.trim()
+    if (!name) {
+      setActionError('Name is required')
+      return
+    }
+
+    const total = parseInt(editQty, 10)
+    if (!Number.isInteger(total) || total < soldCount) {
+      setActionError(`Total must be at least ${soldCount} (already sold)`)
+      return
+    }
+
+    let price = item.price
+    if (!priceLocked) {
+      price = Math.round(parseFloat(editPrice) * 100) / 100
+      if (!Number.isFinite(price) || price < 0) {
+        setActionError('Enter a valid price')
+        return
+      }
+    }
+
+    setBusy(true)
+    setActionError(null)
+    const { error } = await onEdit(item.id, { name, price, quantity_total: total })
+    if (error) {
+      setActionError(error.message)
+    } else {
+      setShowEdit(false)
+    }
+    setBusy(false)
+  }
+
+  // While a form is open, drop the sold-out dimming so its inputs read as
+  // fully interactive (editing the total of a sold-out item is valid — e.g. a
+  // restock or a miscounted starting count).
+  const formOpen = showEdit || showCorrection
+
   const cardClass = [
     'card',
-    outOfStock && 'card-soldout',
+    outOfStock && !formOpen && 'card-soldout',
     lowStock && 'card-warning',
   ].filter(Boolean).join(' ')
 
@@ -72,16 +153,109 @@ export default function ItemCard({ item, onSell, onCorrect }) {
 
       <div className="item-stock">
         {outOfStock
-          ? <span className="text-soldout">Sold out</span>
+          ? <span className="text-soldout">sold out</span>
           : <span className={lowStock ? 'text-warning' : 'text-muted'}>
               {item.quantity_remaining} left
             </span>
         }
+        <span className="text-muted">{item.quantity_total} total</span>
       </div>
 
       {actionError && <p className="text-error">{actionError}</p>}
 
-      {showCorrection ? (
+      {showEdit ? (
+        <form className="item-correction" onSubmit={handleEdit}>
+          <input
+            className="input"
+            type="text"
+            placeholder="Item name"
+            value={editName}
+            onChange={e => setEditName(e.target.value)}
+            autoFocus
+          />
+          <div className="form-row">
+            <label className="field">
+              <span className="field-label">Price</span>
+              <input
+                className="input"
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                placeholder="Price"
+                value={priceLocked ? Number(item.price).toFixed(2) : editPrice}
+                onChange={e => setEditPrice(e.target.value)}
+                disabled={priceLocked}
+              />
+            </label>
+            <label className="field">
+              <span className="field-label">Total qty</span>
+              <input
+                className="input"
+                type="number"
+                min={Math.max(soldCount, 1)}
+                step="1"
+                inputMode="numeric"
+                placeholder="Total qty"
+                value={editQty}
+                onChange={e => setEditQty(e.target.value)}
+              />
+            </label>
+          </div>
+          {priceLocked && (
+            <p className="text-muted item-edit-hint">
+              Price is locked — {soldCount} already sold
+            </p>
+          )}
+          <div className="form-row">
+            <button className="btn btn-primary" type="submit" disabled={busy}>
+              {busy ? '…' : 'Save changes'}
+            </button>
+            <button className="btn btn-ghost" type="button" onClick={closeEdit} disabled={busy}>
+              Cancel
+            </button>
+          </div>
+
+          <div className="item-delete">
+            {confirmDelete ? (
+              <>
+                <p className="item-edit-hint">Delete “{item.name}” for good?</p>
+                <div className="form-row">
+                  <button
+                    className="btn btn-danger"
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={busy}
+                  >
+                    {busy ? '…' : 'Yes, delete'}
+                  </button>
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    disabled={busy}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : canDelete ? (
+              <button
+                className="btn-delete"
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                disabled={busy}
+              >
+                Delete item
+              </button>
+            ) : (
+              <p className="text-muted item-edit-hint">
+                Can't delete — {soldCount} already sold
+              </p>
+            )}
+          </div>
+        </form>
+      ) : showCorrection ? (
         <form className="item-correction" onSubmit={handleCorrect}>
           <input
             className="input"
@@ -151,7 +325,7 @@ export default function ItemCard({ item, onSell, onCorrect }) {
                 <button
                   className="btn btn-ghost"
                   onClick={() => setShowQuantityPicker(true)}
-                  disabled={busy}
+                  disabled={busy || item.quantity_remaining < 2}
                 >
                   Sell more
                 </button>
@@ -159,14 +333,25 @@ export default function ItemCard({ item, onSell, onCorrect }) {
             )
           )}
 
-          {soldCount > 0 && !showQuantityPicker && (
-            <button
-              className="btn-correct"
-              onClick={() => { setShowCorrection(true); setActionError(null) }}
-              disabled={busy}
-            >
-              Submit correction
-            </button>
+          {!showQuantityPicker && (
+            <div className="item-edit-row">
+              <button
+                className="btn-correct"
+                onClick={openEdit}
+                disabled={busy}
+              >
+                Edit
+              </button>
+              {soldCount > 0 && (
+                <button
+                  className="btn-correct"
+                  onClick={() => { setShowCorrection(true); setActionError(null) }}
+                  disabled={busy}
+                >
+                  Submit correction
+                </button>
+              )}
+            </div>
           )}
         </>
       )}

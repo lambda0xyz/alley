@@ -72,7 +72,7 @@ export default function Login() {
               type="text"
               value={identifier}
               onChange={e => setIdentifier(e.target.value)}
-              placeholder="e.g. table12 or sakura"
+              placeholder="e.g. table1"
               autoCapitalize="none"
               autoCorrect="off"
               autoFocus
