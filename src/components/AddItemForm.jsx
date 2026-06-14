@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { uploadItemImage } from '../lib/uploadImage'
+import PhotoPicker from './PhotoPicker'
 
 export default function AddItemForm({ onAdd, onCancel }) {
   const [name, setName] = useState('')
@@ -86,16 +87,7 @@ export default function AddItemForm({ onAdd, onCancel }) {
           required
         />
       </div>
-      <label className="field">
-        <span className="field-label">Photo (optional)</span>
-        <input
-          className="input"
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFileChange}
-        />
-      </label>
+      <PhotoPicker label="Photo (optional)" onChange={handleFileChange} />
       {previewUrl && (
         <img className="item-thumb item-thumb-preview" src={previewUrl} alt="Preview" />
       )}

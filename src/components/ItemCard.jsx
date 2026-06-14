@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { uploadItemImage } from '../lib/uploadImage'
+import PhotoPicker from './PhotoPicker'
 
 const LOW_STOCK_THRESHOLD = 2
 
@@ -270,18 +271,10 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
               Price is locked — {soldCount} already sold
             </p>
           )}
-          <label className="field">
-            <span className="field-label">
-              {item.image_url ? 'Replace photo' : 'Add photo'}
-            </span>
-            <input
-              className="input"
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleEditFileChange}
-            />
-          </label>
+          <PhotoPicker
+            label={item.image_url ? 'Replace photo' : 'Add photo'}
+            onChange={handleEditFileChange}
+          />
           {(editPreviewUrl || item.image_url) && (
             <img
               className="item-thumb item-thumb-preview"
