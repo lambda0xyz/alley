@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const PIN_LENGTH = 4
+const PIN_LENGTH = 6
 
 export default function Login() {
   const { signIn, session, isAdmin, isLoading } = useAuth()

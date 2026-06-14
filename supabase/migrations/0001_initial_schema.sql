@@ -258,7 +258,11 @@ create policy "sales: artists insert for their own items"
 -- Run this once after you first sign up through the app.
 -- Find your UUID in the Supabase dashboard under Authentication > Users.
 -- Admin status is never writable from the client — the RLS policy above blocks it.
-
-update public.profiles
-set is_admin = true
-where id = 'your-user-uuid-here';
+--
+-- Not run as part of this migration: the UUID is per-environment, and a live
+-- UPDATE here would fail the migration (id is uuid; the placeholder is not).
+-- After signing up, paste this into the SQL editor with your real UUID:
+--
+--   update public.profiles
+--   set is_admin = true
+--   where id = 'your-user-uuid-here';
