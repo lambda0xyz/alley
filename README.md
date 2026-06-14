@@ -15,7 +15,8 @@ across all artists and can export an Excel report at the end of the convention.
   delete, so the sales record stays intact.
 - Admin dashboard: live revenue, items sold, and per-artist breakdowns that update as sales
   come in.
-- Excel export: one-click `.xlsx` with a summary sheet plus a sheet per artist.
+- Excel export: one-click `.xlsx` with a summary sheet, a full chronological sales log,
+  and a sheet per artist (per-item breakdown plus that artist's own sales log).
 - Error handling: a top-level error boundary and async paths that roll back and show a
   message on network or session failure.
 
