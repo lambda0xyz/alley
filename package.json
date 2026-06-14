@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "preview": "vite preview",
     "deploy": "vite build && wrangler deploy",
-    "deploy:dev": "vite build --mode development && wrangler deploy --name alley-dev"
+    "deploy:dev": "vite build --mode development && wrangler deploy --env dev"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",

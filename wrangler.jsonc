@@ -10,5 +10,14 @@
   },
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  // Named environment for the dev deployment. The top-level config above is the
+  // production worker (`alley`); `--env dev` deploys the same build to the
+  // `alley-dev` worker. compatibility_date/flags, observability, and assets are
+  // inherited from the top level — only the worker name differs.
+  "env": {
+    "dev": {
+      "name": "alley-dev"
+    }
+  }
 }
