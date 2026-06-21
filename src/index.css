@@ -90,6 +90,11 @@ button, input { font-family: inherit; font-size: inherit; min-width: 0; }
   max-width: 100%;
 }
 
+/* Nudge the Turnstile widget down so it sits clear of the form/PIN pad above. */
+.captcha {
+  margin-top: 16px;
+}
+
 .loading {
   display: flex;
   justify-content: center;

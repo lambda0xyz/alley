@@ -147,6 +147,7 @@ export default function Login() {
 
         <Turnstile
           ref={turnstileRef}
+          className="captcha"
           siteKey={TURNSTILE_SITE_KEY}
           onSuccess={setCaptchaToken}
           onExpire={() => setCaptchaToken(null)}
