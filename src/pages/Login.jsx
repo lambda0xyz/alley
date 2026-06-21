@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Navigate, Link } from 'react-router-dom'
+import { Turnstile } from '@marsidev/react-turnstile'
 import { useAuth } from '../context/AuthContext'
+import { TURNSTILE_SITE_KEY } from '../lib/turnstile'
 
 const PIN_LENGTH = 6
 
@@ -11,6 +13,8 @@ export default function Login() {
   const [step, setStep] = useState('identifier') // 'identifier' | 'pin'
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState(null)
+  const turnstileRef = useRef(null)
 
   if (!isLoading && session) {
     return <Navigate to={isAdmin ? '/admin' : '/artist'} replace />
@@ -39,16 +43,25 @@ export default function Login() {
   }
 
   async function submitLogin(fullPin) {
+    if (!captchaToken) {
+      setError('Verifying you’re human — try again in a moment.')
+      setPin('')
+      return
+    }
+
     setSubmitting(true)
     setError(null)
 
     const email = `${identifier.trim().toLowerCase()}@alley.local`
-    const { error } = await signIn(email, fullPin)
+    const { error } = await signIn(email, fullPin, captchaToken)
 
     if (error) {
       setError('Wrong PIN. Try again.')
       setPin('')
       setSubmitting(false)
+      // Turnstile tokens are single-use — get a fresh one for the next attempt.
+      turnstileRef.current?.reset()
+      setCaptchaToken(null)
     }
     // onAuthStateChange handles the redirect
   }
@@ -131,6 +144,14 @@ export default function Login() {
             </div>
           </div>
         )}
+
+        <Turnstile
+          ref={turnstileRef}
+          siteKey={TURNSTILE_SITE_KEY}
+          onSuccess={setCaptchaToken}
+          onExpire={() => setCaptchaToken(null)}
+          onError={() => setCaptchaToken(null)}
+        />
       </div>
     </div>
   )
