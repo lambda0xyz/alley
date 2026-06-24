@@ -1,16 +1,11 @@
 import { useState } from 'react'
 import { formatSaleTime, formatArtistName } from '../lib/format'
+import { itemSold, itemRevenue, sumSold, sumRevenue } from '../lib/sales'
 
 function computeStats(items) {
-  const totalRevenue = items.reduce((sum, item) => {
-    const sold = item.quantity_total - item.quantity_remaining
-    return sum + sold * Number(item.price)
-  }, 0)
-
-  const totalSold = items.reduce((sum, item) =>
-    sum + (item.quantity_total - item.quantity_remaining), 0
-  )
-
+  // Sold/revenue come from the append-only ledger, not the mutable counters.
+  const totalRevenue = sumRevenue(items)
+  const totalSold = sumSold(items)
   const totalStock = items.reduce((sum, item) =>
     sum + item.quantity_remaining, 0
   )
@@ -59,8 +54,8 @@ export default function AdminArtistCard({ artist }) {
           {artist.items.length === 0
             ? <p className="artist-empty">No items yet.</p>
             : artist.items.map(item => {
-                const sold = item.quantity_total - item.quantity_remaining
-                const revenue = sold * Number(item.price)
+                const sold = itemSold(item)
+                const revenue = itemRevenue(item)
                 const outOfStock = item.quantity_remaining === 0
                 const lowStock = item.quantity_remaining <= 2 && !outOfStock
                 const remainingClass = outOfStock ? 'text-soldout'

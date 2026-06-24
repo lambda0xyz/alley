@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx'
 import { formatArtistName, formatSaleTime } from './format'
+import { itemSold, itemRevenue, sumSold, sumRevenue } from './sales'
 
 // Flatten the nested sales of a set of items into chronological log entries.
 // Each `sale` row is append-only; a negative quantity_sold is a correction.
@@ -81,10 +82,11 @@ function logColWidths({ includeArtist }) {
   return cols
 }
 
-export function exportConventionReport(artists) {
-  const wb = XLSX.utils.book_new()
-
-  // --- Sheet 1: Summary ---
+// Build the Summary sheet AOA. Total Sold and Revenue come from the append-only
+// sales ledger (see src/lib/sales.js); Total Brought and Remaining are the
+// stock counters. Exported so the figures can be asserted before they reach the
+// spreadsheet.
+export function buildSummaryAoa(artists) {
   const summaryRows = [
     ['Artist', 'Items', 'Total Brought', 'Total Sold', 'Remaining', 'Revenue'],
   ]
@@ -94,14 +96,9 @@ export function exportConventionReport(artists) {
 
   for (const artist of artists) {
     const totalBrought = artist.items.reduce((s, i) => s + i.quantity_total, 0)
-    const totalSold = artist.items.reduce(
-      (s, i) => s + (i.quantity_total - i.quantity_remaining), 0
-    )
+    const totalSold = sumSold(artist.items)
     const remaining = artist.items.reduce((s, i) => s + i.quantity_remaining, 0)
-    const revenue = artist.items.reduce((s, i) => {
-      const sold = i.quantity_total - i.quantity_remaining
-      return s + sold * Number(i.price)
-    }, 0)
+    const revenue = sumRevenue(artist.items)
 
     grandRevenue += revenue
     grandSold += totalSold
@@ -119,7 +116,14 @@ export function exportConventionReport(artists) {
   summaryRows.push([])
   summaryRows.push(['TOTAL', '', '', grandSold, '', grandRevenue])
 
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryRows)
+  return summaryRows
+}
+
+export function exportConventionReport(artists) {
+  const wb = XLSX.utils.book_new()
+
+  // --- Sheet 1: Summary ---
+  const summarySheet = XLSX.utils.aoa_to_sheet(buildSummaryAoa(artists))
   summarySheet['!cols'] = [
     { wch: 20 }, { wch: 8 }, { wch: 14 },
     { wch: 12 }, { wch: 12 }, { wch: 12 }
@@ -144,25 +148,20 @@ export function exportConventionReport(artists) {
     ]
 
     for (const item of artist.items) {
-      const sold = item.quantity_total - item.quantity_remaining
+      const sold = itemSold(item)
       rows.push([
         item.name,
         Number(item.price),
         item.quantity_total,
         sold,
         item.quantity_remaining,
-        sold * Number(item.price),
+        itemRevenue(item),
       ])
     }
 
     rows.push([])
-    const totalSold = artist.items.reduce(
-      (s, i) => s + (i.quantity_total - i.quantity_remaining), 0
-    )
-    const totalRevenue = artist.items.reduce((s, i) => {
-      const sold = i.quantity_total - i.quantity_remaining
-      return s + sold * Number(i.price)
-    }, 0)
+    const totalSold = sumSold(artist.items)
+    const totalRevenue = sumRevenue(artist.items)
     rows.push(['TOTAL', '', '', totalSold, '', totalRevenue])
 
     const sheet = XLSX.utils.aoa_to_sheet(rows)

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAdminData } from '../hooks/useAdminData'
+import { sumSold, sumRevenue } from '../lib/sales'
 import AdminArtistCard from '../components/AdminArtistCard'
 import ActivityLog from '../components/ActivityLog'
 import SignOutButton from '../components/SignOutButton'
@@ -23,18 +24,10 @@ export default function AdminDashboard() {
     }
   }
 
-  const totalRevenue = artists.reduce((sum, artist) =>
-    sum + artist.items.reduce((s, item) => {
-      const sold = item.quantity_total - item.quantity_remaining
-      return s + sold * Number(item.price)
-    }, 0), 0
-  )
-
-  const totalSold = artists.reduce((sum, artist) =>
-    sum + artist.items.reduce((s, item) =>
-      s + (item.quantity_total - item.quantity_remaining), 0
-    ), 0
-  )
+  // Figures come from the append-only sales ledger, not the mutable
+  // quantity_total - quantity_remaining counters. See src/lib/sales.js.
+  const totalRevenue = artists.reduce((sum, artist) => sum + sumRevenue(artist.items), 0)
+  const totalSold = artists.reduce((sum, artist) => sum + sumSold(artist.items), 0)
 
   if (loading) return <div className="loading">Loading…</div>
   if (error) return <div className="loading">Error: {error}</div>

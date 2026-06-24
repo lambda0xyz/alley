@@ -1,9 +1,23 @@
 import { describe, it, expect } from 'vitest'
-import { collectSales, buildLogAoa } from './exportExcel'
+import { collectSales, buildLogAoa, buildSummaryAoa } from './exportExcel'
 
 // Minimal item shape: name, price, and the nested append-only sales rows.
 function item(name, price, sales) {
   return { id: `item-${name}`, name, price, sales }
+}
+
+// An untampered item whose stock counter agrees with the ledger, exactly as the
+// sales trigger keeps it. Used to prove the Summary figures are unchanged for
+// legitimate data after switching them onto the ledger.
+function untamperedItem(name, price, total, soldQtys) {
+  const sales = soldQtys.map((quantity_sold, i) => ({
+    id: `${name}-s${i}`,
+    quantity_sold,
+    sold_at: `2026-06-14T0${i}:00:00Z`,
+    notes: null,
+  }))
+  const netSold = soldQtys.reduce((s, q) => s + q, 0)
+  return { id: `item-${name}`, name, price, quantity_total: total, quantity_remaining: total - netSold, sales }
 }
 
 describe('collectSales', () => {
@@ -87,5 +101,67 @@ describe('buildLogAoa', () => {
     const totalRow = aoa[aoa.length - 1]
     expect(totalRow[0]).toBe('TOTAL')
     expect(totalRow[qtyIdx]).toBe(0)
+  })
+})
+
+describe('buildSummaryAoa', () => {
+  const header = ['Artist', 'Items', 'Total Brought', 'Total Sold', 'Remaining', 'Revenue']
+  const soldIdx = header.indexOf('Total Sold')
+  const revenueIdx = header.indexOf('Revenue')
+
+  // Legacy formula the Summary used before the fix (the mutable counters).
+  const legacySold = i => i.quantity_total - i.quantity_remaining
+  const legacyRevenue = a =>
+    a.items.reduce((s, i) => s + legacySold(i) * Number(i.price), 0)
+
+  const artists = [
+    {
+      display_name: 'vincent',
+      items: [
+        untamperedItem('Print', '10.00', 50, [3, 2, -1]),
+        untamperedItem('Pin', '5.00', 100, [10]),
+      ],
+    },
+    {
+      display_name: 'mara',
+      items: [
+        untamperedItem('Sticker', '2.50', 30, []),
+        untamperedItem('Charm', '7.00', 12, [5, -2, 1]),
+      ],
+    },
+  ]
+
+  it('matches the legacy counter figures for untampered data (behaviour unchanged)', () => {
+    const aoa = buildSummaryAoa(artists)
+    expect(aoa[0]).toEqual(header)
+
+    // One data row per artist (after the header), then a spacer + TOTAL.
+    artists.forEach((artist, n) => {
+      const row = aoa[n + 1]
+      const expectedSold = artist.items.reduce((s, i) => s + legacySold(i), 0)
+      expect(row[0]).toBe(artist.display_name)
+      expect(row[soldIdx]).toBe(expectedSold)
+      expect(row[revenueIdx]).toBe(legacyRevenue(artist))
+    })
+
+    const totalRow = aoa[aoa.length - 1]
+    const grandSold = artists.reduce(
+      (s, a) => s + a.items.reduce((x, i) => x + legacySold(i), 0), 0)
+    const grandRevenue = artists.reduce((s, a) => s + legacyRevenue(a), 0)
+    expect(totalRow[0]).toBe('TOTAL')
+    expect(totalRow[soldIdx]).toBe(grandSold)
+    expect(totalRow[revenueIdx]).toBe(grandRevenue)
+  })
+
+  it('reports the true ledger figure when the stock counter is tampered with', () => {
+    // Attacker zeroes their reported sales: quantity_remaining = quantity_total.
+    const tampered = [{
+      display_name: 'vincent',
+      items: [{ ...untamperedItem('Print', '10.00', 50, [4]), quantity_remaining: 50 }],
+    }]
+    const row = buildSummaryAoa(tampered)[1]
+    // Legacy formula would show 0 sold / 0 revenue here; the ledger holds the truth.
+    expect(row[soldIdx]).toBe(4)
+    expect(row[revenueIdx]).toBe(40)
   })
 })
