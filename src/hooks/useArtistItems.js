@@ -8,6 +8,31 @@ const CONNECTION_ERROR = {
   message: "Couldn't reach the server — check your connection and try again.",
 }
 
+// Shared optimistic-write scaffold for the mutating actions. `apply` performs
+// the optimistic state change and returns its own rollback; `run` is the async
+// Supabase call. On a thrown rejection (network down) or a returned { error },
+// we roll back and surface the error; optional `mapError` rewrites a returned
+// error (e.g. a constraint code) into a friendlier message. Always resolves to
+// the app-wide { error } shape.
+async function optimisticWrite({ apply, run, mapError }) {
+  const rollback = apply()
+
+  let result
+  try {
+    result = await run()
+  } catch {
+    rollback()
+    return { error: CONNECTION_ERROR }
+  }
+
+  if (result.error) {
+    rollback()
+    return { error: mapError ? mapError(result.error) : result.error }
+  }
+
+  return { error: null }
+}
+
 export function useArtistItems() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -41,7 +66,7 @@ export function useArtistItems() {
   // A positive quantity_sold is a sale (stock down); a negative one is a
   // correction (stock back up). The DB trigger does remaining - quantity_sold,
   // so the optimistic math here mirrors it.
-  async function recordSale(itemId, quantitySold, notes = null) {
+  function recordSale(itemId, quantitySold, notes = null) {
     const applyDelta = (delta) =>
       setItems((prev) =>
         prev.map((item) =>
@@ -51,24 +76,16 @@ export function useArtistItems() {
         ),
       )
 
-    applyDelta(-quantitySold) // optimistic
-
-    let result
-    try {
-      result = await supabase
-        .from('sales')
-        .insert({ item_id: itemId, quantity_sold: quantitySold, notes })
-    } catch {
-      applyDelta(quantitySold) // roll back
-      return { error: CONNECTION_ERROR }
-    }
-
-    if (result.error) {
-      applyDelta(quantitySold) // roll back
-      return { error: result.error }
-    }
-
-    return { error: null }
+    return optimisticWrite({
+      apply: () => {
+        applyDelta(-quantitySold)
+        return () => applyDelta(quantitySold)
+      },
+      run: () =>
+        supabase
+          .from('sales')
+          .insert({ item_id: itemId, quantity_sold: quantitySold, notes }),
+    })
   }
 
   function sellItem(itemId, quantity = 1) {
@@ -117,57 +134,37 @@ export function useArtistItems() {
       updates.image_url = fields.image_url
     }
 
-    const rollback = () =>
-      setItems((prev) => prev.map((i) => (i.id === itemId ? item : i)))
-    setItems((prev) =>
-      prev.map((i) => (i.id === itemId ? { ...i, ...updates } : i)),
-    )
-
-    let result
-    try {
-      result = await supabase.from('items').update(updates).eq('id', itemId)
-    } catch {
-      rollback()
-      return { error: CONNECTION_ERROR }
-    }
-
-    if (result.error) {
-      rollback()
-      return { error: result.error }
-    }
-
-    return { error: null }
+    return optimisticWrite({
+      apply: () => {
+        setItems((prev) =>
+          prev.map((i) => (i.id === itemId ? { ...i, ...updates } : i)),
+        )
+        return () =>
+          setItems((prev) => prev.map((i) => (i.id === itemId ? item : i)))
+      },
+      run: () => supabase.from('items').update(updates).eq('id', itemId),
+    })
   }
 
   // Removes an item entirely. Only safe when nothing has sold: the sales FK is
   // ON DELETE RESTRICT, so the DB rejects deleting an item with any sales rows.
   // We surface that as a friendly message rather than the raw constraint error.
-  async function deleteItem(itemId) {
-    const prev = items
-    setItems((prevItems) => prevItems.filter((i) => i.id !== itemId))
-
-    let result
-    try {
-      result = await supabase.from('items').delete().eq('id', itemId)
-    } catch {
-      setItems(prev) // restore on failure
-      return { error: CONNECTION_ERROR }
-    }
-
-    if (result.error) {
-      setItems(prev) // restore on failure
-      const blockedBySales = result.error.code === '23503'
-      return {
-        error: blockedBySales
+  function deleteItem(itemId) {
+    return optimisticWrite({
+      apply: () => {
+        const prev = items
+        setItems((prevItems) => prevItems.filter((i) => i.id !== itemId))
+        return () => setItems(prev) // restore on failure
+      },
+      run: () => supabase.from('items').delete().eq('id', itemId),
+      mapError: (error) =>
+        error.code === '23503'
           ? {
               message:
                 "Can't delete an item that has sales — use a correction instead",
             }
-          : result.error,
-      }
-    }
-
-    return { error: null }
+          : error,
+    })
   }
 
   async function addItem(fields) {

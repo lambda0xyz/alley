@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useImagePicker } from '../hooks/useImagePicker'
 import { uploadItemImage } from '../lib/uploadImage'
 import PhotoPicker from './PhotoPicker'
 
@@ -21,10 +22,14 @@ export default function ItemCard({
   const [editName, setEditName] = useState(item.name)
   const [editPrice, setEditPrice] = useState(String(item.price))
   const [editQty, setEditQty] = useState(String(item.quantity_total))
-  const [editImageFile, setEditImageFile] = useState(null)
-  const [editPreviewUrl, setEditPreviewUrl] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showImage, setShowImage] = useState(false)
+  const {
+    file: editImageFile,
+    previewUrl: editPreviewUrl,
+    onChange: handleEditFileChange,
+    clear: clearEditPreview,
+  } = useImagePicker()
 
   // Close the full-image lightbox on Escape, alongside tap-to-close.
   useEffect(() => {
@@ -89,23 +94,6 @@ export default function ItemCard({
     setCorrectQty('')
     setCorrectNote('')
     setActionError(null)
-  }
-
-  function clearEditPreview() {
-    setEditImageFile(null)
-    setEditPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return null
-    })
-  }
-
-  function handleEditFileChange(e) {
-    const file = e.target.files?.[0] ?? null
-    setEditImageFile(file)
-    setEditPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return file ? URL.createObjectURL(file) : null
-    })
   }
 
   function openEdit() {

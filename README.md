@@ -32,7 +32,9 @@ across all artists and can export an Excel report at the end of the convention.
 > [!NOTE]
 > The app needs a Supabase project (database schema, auth, and a storage bucket) to run.
 > A full setup guide is still to come — for now this covers the local dev loop against an
-> existing Supabase project.
+> existing Supabase project. Sign-in is also gated by a Cloudflare Turnstile captcha, so
+> enable Captcha protection (provider Turnstile) in your Supabase Auth settings — otherwise
+> every sign-in is rejected.
 
 ```bash
 # 1. Install dependencies

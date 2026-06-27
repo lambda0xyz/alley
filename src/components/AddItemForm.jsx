@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useImagePicker } from '../hooks/useImagePicker'
 import { uploadItemImage } from '../lib/uploadImage'
 import PhotoPicker from './PhotoPicker'
 
@@ -6,21 +7,13 @@ export default function AddItemForm({ onAdd, onCancel }) {
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [quantity, setQuantity] = useState('')
-  const [imageFile, setImageFile] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
-
-  // Local object URL just for the preview — revoked when a new file replaces it.
-  const [previewUrl, setPreviewUrl] = useState(null)
-
-  function handleFileChange(e) {
-    const file = e.target.files?.[0] ?? null
-    setImageFile(file)
-    setPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return file ? URL.createObjectURL(file) : null
-    })
-  }
+  const {
+    file: imageFile,
+    previewUrl,
+    onChange: handleFileChange,
+  } = useImagePicker()
 
   async function handleSubmit(e) {
     e.preventDefault()
