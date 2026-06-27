@@ -89,7 +89,7 @@ export default function Login() {
             className="form-stack form-narrow"
           >
             <label className="form-label" htmlFor="identifier">
-              Your name or table number
+              Your artist name
             </label>
             <input
               id="identifier"
