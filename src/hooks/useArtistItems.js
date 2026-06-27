@@ -104,7 +104,7 @@ export function useArtistItems() {
   // sold count (and thus revenue) is preserved — and it can't drop below what
   // has already sold. Price is locked once anything has sold, because sales
   // don't snapshot price: editing it would retroactively rewrite past revenue.
-  async function editItem(itemId, fields) {
+  function editItem(itemId, fields) {
     const item = items.find((i) => i.id === itemId)
     if (!item) return { error: { message: 'Item not found' } }
 

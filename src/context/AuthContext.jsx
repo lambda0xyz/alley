@@ -60,11 +60,17 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut()
   }
 
+  // Two distinct "not settled yet" cases: the initial getSession() hasn't
+  // resolved (session still undefined), or we have a session but its profile
+  // row is still being fetched. Either one means auth state isn't ready.
+  const sessionLoading = session === undefined
+  const profileLoading = session !== null && profile === null
+
   const value = {
     session, // the raw Supabase session (null if logged out)
     profile, // your public.profiles row (has is_admin, display_name)
     isAdmin: profile?.is_admin ?? false,
-    isLoading: session === undefined || (session !== null && profile === null), // true only during the initial getSession() check
+    isLoading: sessionLoading || profileLoading,
     signIn,
     signOut,
   }

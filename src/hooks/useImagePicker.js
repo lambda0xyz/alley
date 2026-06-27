@@ -31,6 +31,8 @@ export function useImagePicker() {
     setPreview(null)
   }, [setPreview])
 
+  // Cleanup-only effect: the returned function is the unmount cleanup (there's
+  // no setup), revoking the last live preview URL so it doesn't leak.
   useEffect(
     () => () => {
       if (urlRef.current) URL.revokeObjectURL(urlRef.current)

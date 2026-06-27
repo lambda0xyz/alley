@@ -35,23 +35,19 @@ export default function ActivityLog({ artists }) {
         <p className="artist-empty">No sales yet.</p>
       ) : (
         <div className="activity-list">
-          {recent.map((entry) => {
-            return (
-              <div key={entry.id} className="activity-row">
-                <SaleQty quantity={entry.quantity} />
-                <div className="activity-main">
-                  <span className="activity-item-name">{entry.item}</span>
-                  <span className="activity-artist">{entry.artist}</span>
-                  {entry.notes && (
-                    <span className="sale-note">{entry.notes}</span>
-                  )}
-                </div>
-                <span className="sale-time">
-                  {formatSaleTime(entry.soldAt)}
-                </span>
+          {recent.map((entry) => (
+            <div key={entry.id} className="activity-row">
+              <SaleQty quantity={entry.quantity} />
+              <div className="activity-main">
+                <span className="activity-item-name">{entry.item}</span>
+                <span className="activity-artist">{entry.artist}</span>
+                {entry.notes && (
+                  <span className="sale-note">{entry.notes}</span>
+                )}
               </div>
-            )
-          })}
+              <span className="sale-time">{formatSaleTime(entry.soldAt)}</span>
+            </div>
+          ))}
         </div>
       )}
     </div>

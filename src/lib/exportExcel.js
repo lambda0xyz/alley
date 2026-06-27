@@ -193,6 +193,7 @@ export function exportConventionReport(artists) {
       ['Sales Log'],
       ...buildLogAoa(log, { includeArtist: false }),
     ]
+    // origin: -1 tells SheetJS to start writing at the row after the last one.
     XLSX.utils.sheet_add_aoa(sheet, logAoa, { origin: -1 })
 
     // Sheet name max 31 chars, no special chars

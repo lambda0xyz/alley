@@ -4,16 +4,10 @@ import { itemRevenue, itemSold, sumRevenue, sumSold } from '../lib/sales'
 import { stockStatus } from '../lib/stock'
 import SaleQty from './SaleQty'
 
-function computeStats(items) {
-  // Sold/revenue come from the append-only ledger, not the mutable counters.
-  const totalRevenue = sumRevenue(items)
-  const totalSold = sumSold(items)
-  const totalStock = items.reduce(
-    (sum, item) => sum + item.quantity_remaining,
-    0,
-  )
-
-  return { totalRevenue, totalSold, totalStock }
+// Remaining stock across an artist's items. Sold/revenue come from the
+// append-only ledger (sumSold/sumRevenue), not these mutable counters.
+function computeTotalStock(items) {
+  return items.reduce((sum, item) => sum + item.quantity_remaining, 0)
 }
 
 export default function AdminArtistCard({ artist }) {
@@ -21,12 +15,15 @@ export default function AdminArtistCard({ artist }) {
   // Which item rows have their sale history open. Tracked per item id so
   // several can be expanded at once independently of the artist toggle.
   const [openItems, setOpenItems] = useState(() => new Set())
-  const { totalRevenue, totalSold, totalStock } = computeStats(artist.items)
+  const totalRevenue = sumRevenue(artist.items)
+  const totalSold = sumSold(artist.items)
+  const totalStock = computeTotalStock(artist.items)
 
   function toggleItem(itemId) {
     setOpenItems((prev) => {
       const next = new Set(prev)
-      next.has(itemId) ? next.delete(itemId) : next.add(itemId)
+      if (next.has(itemId)) next.delete(itemId)
+      else next.add(itemId)
       return next
     })
   }
