@@ -1,4 +1,6 @@
 import { formatArtistName, formatSaleTime } from '../lib/format'
+import { flattenItemSales } from '../lib/sales'
+import SaleQty from './SaleQty'
 
 // How many of the most recent sales/corrections to show. The data is already
 // fully loaded by useAdminData (and kept live by its realtime subscription),
@@ -7,21 +9,12 @@ import { formatArtistName, formatSaleTime } from '../lib/format'
 const ACTIVITY_LIMIT = 20
 
 function buildRecent(artists) {
-  const entries = []
-  for (const artist of artists) {
-    for (const item of artist.items) {
-      for (const sale of item.sales || []) {
-        entries.push({
-          id: sale.id,
-          artist: formatArtistName(artist.display_name),
-          item: item.name,
-          quantity: sale.quantity_sold,
-          soldAt: sale.sold_at,
-          notes: sale.notes,
-        })
-      }
-    }
-  }
+  const entries = artists.flatMap((artist) =>
+    flattenItemSales(artist.items).map((sale) => ({
+      ...sale,
+      artist: formatArtistName(artist.display_name),
+    })),
+  )
   entries.sort((a, b) => new Date(b.soldAt) - new Date(a.soldAt))
   return entries.slice(0, ACTIVITY_LIMIT)
 }
@@ -43,18 +36,9 @@ export default function ActivityLog({ artists }) {
       ) : (
         <div className="activity-list">
           {recent.map((entry) => {
-            // Negative quantity is a correction (stock added back); a note
-            // usually explains why. Positive is a normal sale.
-            const correction = entry.quantity < 0
             return (
               <div key={entry.id} className="activity-row">
-                <span
-                  className={`sale-qty ${correction ? 'sale-qty-correction' : ''}`}
-                >
-                  {correction
-                    ? `−${Math.abs(entry.quantity)}`
-                    : `×${entry.quantity}`}
-                </span>
+                <SaleQty quantity={entry.quantity} />
                 <div className="activity-main">
                   <span className="activity-item-name">{entry.item}</span>
                   <span className="activity-artist">{entry.artist}</span>

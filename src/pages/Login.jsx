@@ -1,24 +1,28 @@
-import { Turnstile } from '@marsidev/react-turnstile'
-import { useRef, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import TurnstileWidget from '../components/TurnstileWidget'
 import { useAuth } from '../context/AuthContext'
-import { TURNSTILE_SITE_KEY } from '../lib/turnstile'
+import { useRedirectIfAuthed } from '../hooks/useRedirectIfAuthed'
+import { useTurnstile } from '../hooks/useTurnstile'
 
 const PIN_LENGTH = 6
 
 export default function Login() {
-  const { signIn, session, isAdmin, isLoading } = useAuth()
+  const { signIn } = useAuth()
+  const redirect = useRedirectIfAuthed()
   const [identifier, setIdentifier] = useState('')
   const [pin, setPin] = useState('')
   const [step, setStep] = useState('identifier') // 'identifier' | 'pin'
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
-  const [captchaToken, setCaptchaToken] = useState(null)
-  const turnstileRef = useRef(null)
+  const {
+    token: captchaToken,
+    setToken: setCaptchaToken,
+    ref: turnstileRef,
+    reset: resetCaptcha,
+  } = useTurnstile()
 
-  if (!isLoading && session) {
-    return <Navigate to={isAdmin ? '/admin' : '/artist'} replace />
-  }
+  if (redirect) return redirect
 
   function handleIdentifierSubmit(e) {
     e.preventDefault()
@@ -59,9 +63,7 @@ export default function Login() {
       setError('Wrong PIN. Try again.')
       setPin('')
       setSubmitting(false)
-      // Turnstile tokens are single-use — get a fresh one for the next attempt.
-      turnstileRef.current?.reset()
-      setCaptchaToken(null)
+      resetCaptcha()
     }
     // onAuthStateChange handles the redirect
   }
@@ -161,13 +163,10 @@ export default function Login() {
           </div>
         )}
 
-        <Turnstile
-          ref={turnstileRef}
+        <TurnstileWidget
+          innerRef={turnstileRef}
+          onToken={setCaptchaToken}
           className="captcha"
-          siteKey={TURNSTILE_SITE_KEY}
-          onSuccess={setCaptchaToken}
-          onExpire={() => setCaptchaToken(null)}
-          onError={() => setCaptchaToken(null)}
         />
       </div>
     </div>

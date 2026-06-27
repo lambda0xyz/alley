@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { formatArtistName, formatSaleTime } from '../lib/format'
 import { itemRevenue, itemSold, sumRevenue, sumSold } from '../lib/sales'
+import SaleQty from './SaleQty'
 
 function computeStats(items) {
   // Sold/revenue come from the append-only ledger, not the mutable counters.
@@ -120,26 +121,17 @@ export default function AdminArtistCard({ artist }) {
 
                   {hasSales && isOpen && (
                     <div className="sale-log">
-                      {sales.map((sale) => {
-                        const correction = sale.quantity_sold < 0
-                        return (
-                          <div key={sale.id} className="sale-row">
-                            <span
-                              className={`sale-qty ${correction ? 'sale-qty-correction' : ''}`}
-                            >
-                              {correction
-                                ? `−${Math.abs(sale.quantity_sold)}`
-                                : `×${sale.quantity_sold}`}
-                            </span>
-                            <span className="sale-time">
-                              {formatSaleTime(sale.sold_at)}
-                            </span>
-                            {sale.notes && (
-                              <span className="sale-note">{sale.notes}</span>
-                            )}
-                          </div>
-                        )
-                      })}
+                      {sales.map((sale) => (
+                        <div key={sale.id} className="sale-row">
+                          <SaleQty quantity={sale.quantity_sold} />
+                          <span className="sale-time">
+                            {formatSaleTime(sale.sold_at)}
+                          </span>
+                          {sale.notes && (
+                            <span className="sale-note">{sale.notes}</span>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

@@ -27,3 +27,25 @@ export function sumSold(items) {
 export function sumRevenue(items) {
   return items.reduce((sum, item) => sum + itemRevenue(item), 0)
 }
+
+// Flatten the nested append-only sales of a list of items into flat entries,
+// each carrying its parent item's name and (numeric) price alongside the sale
+// fields. Items with no sales contribute nothing. Callers add artist
+// attribution, sorting, and presentation. Unsorted — the order follows the
+// input items and their nested sales.
+export function flattenItemSales(items) {
+  const rows = []
+  for (const item of items) {
+    for (const sale of item.sales || []) {
+      rows.push({
+        id: sale.id,
+        soldAt: sale.sold_at,
+        item: item.name,
+        price: Number(item.price),
+        quantity: sale.quantity_sold,
+        notes: sale.notes,
+      })
+    }
+  }
+  return rows
+}

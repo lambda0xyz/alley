@@ -1,21 +1,25 @@
-import { Turnstile } from '@marsidev/react-turnstile'
-import { useRef, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import TurnstileWidget from '../components/TurnstileWidget'
 import { useAuth } from '../context/AuthContext'
-import { TURNSTILE_SITE_KEY } from '../lib/turnstile'
+import { useRedirectIfAuthed } from '../hooks/useRedirectIfAuthed'
+import { useTurnstile } from '../hooks/useTurnstile'
 
 export default function AdminLogin() {
-  const { signIn, session, isAdmin, isLoading } = useAuth()
+  const { signIn } = useAuth()
+  const redirect = useRedirectIfAuthed()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
-  const [captchaToken, setCaptchaToken] = useState(null)
-  const turnstileRef = useRef(null)
+  const {
+    token: captchaToken,
+    setToken: setCaptchaToken,
+    ref: turnstileRef,
+    reset: resetCaptcha,
+  } = useTurnstile()
 
-  if (!isLoading && session) {
-    return <Navigate to={isAdmin ? '/admin' : '/artist'} replace />
-  }
+  if (redirect) return redirect
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -27,9 +31,7 @@ export default function AdminLogin() {
     if (error) {
       setError(error.message)
       setSubmitting(false)
-      // Turnstile tokens are single-use — get a fresh one for the next attempt.
-      turnstileRef.current?.reset()
-      setCaptchaToken(null)
+      resetCaptcha()
     }
   }
 
@@ -57,13 +59,7 @@ export default function AdminLogin() {
             required
           />
           {error && <p className="text-error">{error}</p>}
-          <Turnstile
-            ref={turnstileRef}
-            siteKey={TURNSTILE_SITE_KEY}
-            onSuccess={setCaptchaToken}
-            onExpire={() => setCaptchaToken(null)}
-            onError={() => setCaptchaToken(null)}
-          />
+          <TurnstileWidget innerRef={turnstileRef} onToken={setCaptchaToken} />
           <button
             className="btn btn-primary btn-full"
             type="submit"

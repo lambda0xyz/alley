@@ -1,27 +1,29 @@
 import * as XLSX from 'xlsx'
 import { formatArtistName, formatSaleTime } from './format'
-import { itemRevenue, itemSold, sumRevenue, sumSold } from './sales'
+import {
+  flattenItemSales,
+  itemRevenue,
+  itemSold,
+  sumRevenue,
+  sumSold,
+} from './sales'
 
-// Flatten the nested sales of a set of items into chronological log entries.
-// Each `sale` row is append-only; a negative quantity_sold is a correction.
+// Flatten the nested sales of a set of items into chronological log entries
+// in the shape the log/summary builders expect. Each `sale` row is append-only;
+// a negative quantity_sold is a correction.
 // Exported for unit testing the log/netting logic.
 export function collectSales(items, artistName) {
-  const rows = []
-  for (const item of items) {
-    for (const sale of item.sales || []) {
-      rows.push({
-        soldAt: sale.sold_at,
-        artist: artistName,
-        item: item.name,
-        qty: sale.quantity_sold,
-        price: Number(item.price),
-        notes: sale.notes || '',
-        saleId: sale.id,
-      })
-    }
-  }
-  rows.sort((a, b) => new Date(a.soldAt) - new Date(b.soldAt))
-  return rows
+  return flattenItemSales(items)
+    .map((sale) => ({
+      soldAt: sale.soldAt,
+      artist: artistName,
+      item: sale.item,
+      qty: sale.quantity,
+      price: sale.price,
+      notes: sale.notes || '',
+      saleId: sale.id,
+    }))
+    .sort((a, b) => new Date(a.soldAt) - new Date(b.soldAt))
 }
 
 // Build an AOA (array-of-arrays) chronological log sheet from collected sales.
