@@ -26,6 +26,7 @@ across all artists and can export an Excel report at the end of the convention.
 - Backend: [Supabase](https://supabase.com) — Postgres, Auth, Realtime, and Storage
 - Export: SheetJS (`xlsx`), lazy-loaded so it stays out of the main bundle
 - Hosting: Cloudflare Workers (static assets), deployed on push to `main`
+- Testing: Vitest (unit) + Playwright (end-to-end against local Supabase)
 
 ## Getting started
 
@@ -59,12 +60,31 @@ to a fresh Supabase project to recreate the tables, triggers, and row-level secu
 | `npm run dev` | Start the Vite dev server |
 | `npm run build` | Production build to `dist/` |
 | `npm run preview` | Preview the production build locally |
-| `npm test` | Run the test suite once (Vitest) |
-| `npm run test:watch` | Run tests in watch mode |
+| `npm test` | Run the unit test suite once (Vitest) |
+| `npm run test:watch` | Run unit tests in watch mode |
+| `npm run test:e2e` | Run end-to-end tests (Playwright; needs local Supabase) |
+| `npm run test:e2e:ui` | Run E2E tests in Playwright's interactive UI |
 | `npm run lint` | Lint & format check with Biome |
 | `npm run lint:fix` | Apply safe Biome lint/format fixes |
 | `npm run format` | Format files with Biome |
 | `npm run deploy` | Build and deploy to Cloudflare Workers |
+
+## Testing
+
+Two layers, kept separate:
+
+- **Unit (Vitest)** — fast logic tests with Supabase mocked. `npm test`.
+- **End-to-end (Playwright)** — drives a real mobile browser against a *local* Supabase
+  stack (real migrations, triggers, and RLS), so it exercises the server logic the unit
+  tests mock out. Requires Docker, with the local stack running:
+
+  ```bash
+  supabase start      # boots local Postgres/Auth/Realtime (needs Docker)
+  npm run test:e2e
+  ```
+
+See [`e2e/README.md`](e2e/README.md) for the full guide — auth setup, test data, and how
+the projects are wired.
 
 ## Project structure
 
@@ -77,6 +97,7 @@ src/
   pages/        Login, AdminLogin, ArtistDashboard, AdminDashboard, NotFound
 supabase/
   migrations/   SQL schema, triggers, and RLS policies
+e2e/            Playwright end-to-end tests (run against local Supabase)
 ```
 
 ## License

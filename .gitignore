@@ -13,10 +13,10 @@ dist-ssr
 *.local
 
 # Editor directories and files
-.vscode/*
-supabase/.temp/*
+.vscode
+supabase/.temp
 !.vscode/extensions.json
-.claude/*
+.claude
 .idea
 .DS_Store
 *.suo
@@ -31,4 +31,12 @@ supabase/.temp/*
 !.dev.vars.example
 .env*
 !.env.example
+!.env.test
 AGENTS.md
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/e2e/.auth/
