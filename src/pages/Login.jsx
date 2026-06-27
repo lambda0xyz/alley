@@ -60,7 +60,10 @@ export default function Login() {
     const { error } = await signIn(email, fullPin, captchaToken)
 
     if (error) {
-      setError('Wrong PIN. Try again.')
+      // The login throttle (server-side auth hook) sends a cooldown message on
+      // too many wrong tries — surface that verbatim; otherwise stay friendly.
+      const locked = error.message?.startsWith('Too many attempts')
+      setError(locked ? error.message : 'Wrong PIN. Try again.')
       setPin('')
       setSubmitting(false)
       resetCaptcha()

@@ -34,7 +34,8 @@ across all artists and can export an Excel report at the end of the convention.
 > A full setup guide is still to come — for now this covers the local dev loop against an
 > existing Supabase project. Sign-in is also gated by a Cloudflare Turnstile captcha, so
 > enable Captcha protection (provider Turnstile) in your Supabase Auth settings — otherwise
-> every sign-in is rejected.
+> every sign-in is rejected. Accounts are admin-created (there is no public sign-up flow), so
+> also turn OFF "Allow new users to sign up" in those settings to close that surface.
 
 ```bash
 # 1. Install dependencies
