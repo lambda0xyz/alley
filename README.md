@@ -79,7 +79,8 @@ Two layers, kept separate:
   tests mock out. Requires Docker, with the local stack running:
 
   ```bash
-  supabase start      # boots local Postgres/Auth/Realtime (needs Docker)
+  npx playwright install chromium   # first run only — fetches the test browser
+  supabase start                    # boots local Postgres/Auth/Realtime (needs Docker)
   npm run test:e2e
   ```
 

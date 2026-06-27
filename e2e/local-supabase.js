@@ -19,3 +19,13 @@ export const TEST_ARTIST = {
   pin: '482134',
   displayName: 'table1',
 }
+
+// The admin account the admin suite signs in as. Admin auth is plain
+// email + password (not the artist name + PIN), and is_admin is flipped on the
+// profile via the service-role key in admin.setup.js — the RLS policy blocks a
+// user from promoting themselves. Local-only credentials, safe to commit.
+export const TEST_ADMIN = {
+  email: 'admin@alley.local',
+  password: 'admin-test-pw-9271',
+  displayName: 'Admin',
+}

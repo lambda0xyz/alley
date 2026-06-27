@@ -6,8 +6,11 @@ import { defineConfig, devices } from '@playwright/test'
 //
 // Projects:
 //   setup       — seeds the test artist and saves a signed-in storageState
-//   logged-out  — pages that must run unauthenticated (the login UI)
-//   logged-in   — pages behind auth; reuse the storageState from `setup`
+//   setup-admin — seeds an admin account and saves its signed-in storageState
+//   logged-out  — pages that must run unauthenticated (the login UIs)
+//   logged-in   — artist pages behind auth; reuse the storageState from `setup`
+//   admin        — admin pages; reuse the storageState from `setup-admin`,
+//                  and depend on `setup` too so there's artist data to show
 //
 // Prerequisite: the local stack must be running first — `supabase start`.
 export default defineConfig({
@@ -30,6 +33,11 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
     },
     {
+      name: 'setup-admin',
+      testMatch: '**/admin.setup.js',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
       // Alley is phone-first, so every project emulates a mobile device.
       name: 'logged-out',
       testMatch: '**/logged-out/**/*.spec.js',
@@ -40,6 +48,14 @@ export default defineConfig({
       testMatch: '**/logged-in/**/*.spec.js',
       use: { ...devices['Pixel 5'], storageState: 'e2e/.auth/artist.json' },
       dependencies: ['setup'],
+    },
+    {
+      name: 'admin',
+      testMatch: '**/admin/**/*.spec.js',
+      use: { ...devices['Pixel 5'], storageState: 'e2e/.auth/admin.json' },
+      // setup logs the admin in; setup also seeds the artist + inventory the
+      // dashboard and Excel report read.
+      dependencies: ['setup', 'setup-admin'],
     },
   ],
   // Boot `vite --mode test` for the run and reuse it locally if already up.

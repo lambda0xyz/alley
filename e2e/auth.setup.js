@@ -2,6 +2,7 @@ import { mkdirSync } from 'node:fs'
 import { test as setup } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { SERVICE_ROLE_KEY, SUPABASE_URL, TEST_ARTIST } from './local-supabase'
+import { loginWithPin } from './login'
 
 // Signed-in browser state is saved here for the "logged-in" project to reuse,
 // so those tests skip the login UI entirely.
@@ -36,13 +37,14 @@ setup('seed test artist and capture signed-in state', async ({ page }) => {
   // 2. Ensure the artist has inventory (insert once; reruns keep existing rows).
   await ensureItems(admin, userId)
 
+  // 2b. Ensure the public bucket the photo-upload path writes to exists. It's
+  // declared in config.toml (so a fresh `supabase start` has it); this covers an
+  // already-running stack that predates that declaration.
+  await ensureBucket(admin)
+
   // 3. Log in through the real UI so supabase-js writes its own session into
   // localStorage, then persist that state for the logged-in tests.
-  await page.goto('/login')
-  await page.getByLabel('Your artist name').fill(TEST_ARTIST.identifier)
-  await page.getByRole('button', { name: 'Continue' }).click()
-  await enterPin(page, TEST_ARTIST.pin)
-  await page.waitForURL('**/artist')
+  await loginWithPin(page, TEST_ARTIST.identifier, TEST_ARTIST.pin)
 
   mkdirSync('e2e/.auth', { recursive: true })
   await page.context().storageState({ path: authFile })
@@ -72,6 +74,14 @@ async function findUserByEmail(admin, email) {
   return data.users.find((u) => u.email === email) ?? null
 }
 
+async function ensureBucket(admin) {
+  const { error } = await admin.storage.createBucket('item-images', {
+    public: true,
+  })
+  // Ignore "already exists"; surface anything genuinely wrong.
+  if (error && !/exist/i.test(error.message)) throw error
+}
+
 async function ensureItems(admin, artistId) {
   const { count } = await admin
     .from('items')
@@ -81,22 +91,4 @@ async function ensureItems(admin, artistId) {
   const rows = SEED_ITEMS.map((item) => ({ ...item, artist_id: artistId }))
   const { error } = await admin.from('items').insert(rows)
   if (error) throw error
-}
-
-async function enterPin(page, pin) {
-  // The pad auto-submits on the 6th digit, but submitLogin needs the (dummy)
-  // Turnstile token first; if it isn't ready it shows a "verifying" guard and
-  // clears the PIN. Retry until we land on /artist.
-  for (let attempt = 0; attempt < 5; attempt++) {
-    for (const digit of pin) {
-      await page.getByRole('button', { name: digit, exact: true }).click()
-    }
-    const landed = await page
-      .waitForURL('**/artist', { timeout: 3000 })
-      .then(() => true)
-      .catch(() => false)
-    if (landed) return
-    await page.waitForTimeout(500)
-  }
-  throw new Error('PIN login never reached /artist (Turnstile token missing?)')
 }

@@ -6,7 +6,13 @@ runs unit tests, `npm run test:e2e` runs these.
 
 ## Prerequisites
 
-These tests need a local database. Start it first (requires Docker running):
+On a fresh checkout, fetch the browser once (the suite runs mobile-Chromium only):
+
+```bash
+npx playwright install chromium
+```
+
+These tests also need a local database. Start it first (requires Docker running):
 
 ```bash
 supabase start      # boots Postgres + Auth + Realtime, applies supabase/migrations/
@@ -35,26 +41,59 @@ it at **local Supabase** and swaps in a Cloudflare Turnstile **test sitekey**
 solve. Local Supabase also has captcha disabled server-side, so sign-in just
 works.
 
-Three Playwright projects (see `playwright.config.js`):
+Five Playwright projects (see `playwright.config.js`):
 
 | Project | Runs | Auth |
 | --- | --- | --- |
 | `setup` | `auth.setup.js` | seeds the test artist + inventory, logs in via the real UI, saves the session to `e2e/.auth/artist.json` |
-| `logged-out` | `logged-out/**` | none — for the login UI |
-| `logged-in` | `logged-in/**` | reuses the saved session (`storageState`), so tests land straight on authenticated pages |
+| `setup-admin` | `admin.setup.js` | creates an admin account (email + password, `is_admin` flipped via service role), logs in via the admin UI, saves the session to `e2e/.auth/admin.json` |
+| `logged-out` | `logged-out/**` | none — for the login UIs |
+| `logged-in` | `logged-in/**` | reuses the artist session (`storageState`), so tests land straight on the artist dashboard |
+| `admin` | `admin/**` | reuses the admin session (`storageState`), so tests land straight on the admin dashboard |
 
-`logged-in` depends on `setup`, so the session is always fresh.
+`logged-in` depends on `setup`. `admin` depends on `setup` **and** `setup-admin`
+— it reuses the admin session, and it needs the seeded artist's inventory to
+have something to display, aggregate, and export.
+
+Admins auth differently from artists: plain email + password, not the artist
+name + PIN. `is_admin` is never client-writable (RLS blocks self-promotion), so
+`admin.setup.js` flips it with the service-role key.
 
 ## Files
 
 ```
-auth.setup.js                      seeds data + captures the signed-in storageState
-local-supabase.js                  local URL + keys + test-artist constants
-logged-out/login.spec.js           login page renders; identifier -> PIN transition
+auth.setup.js                      seeds the artist + inventory + storage bucket, captures the signed-in storageState
+admin.setup.js                     creates + promotes the admin, captures the signed-in storageState
+local-supabase.js                  local URL + keys + test-artist / test-admin constants
+login.js                           loginWithPin() — drives the artist name -> PIN-pad UI (shared)
+fixtures/png.js                    makePng() — builds a valid in-memory PNG for the photo tests
+logged-out/login.spec.js           artist login page renders; identifier -> PIN transition
+logged-out/login-negative.spec.js  a wrong PIN shows an error and clears the pad
+logged-out/admin-login.spec.js     admin login page renders; anon /admin -> /admin/login
+logged-out/routing.spec.js         unknown path -> NotFound; anon /artist -> /login
+logged-out/sign-out.spec.js        sign in a throwaway artist, Sign out -> back to /login
 logged-in/artist-dashboard.spec.js dashboard shows the seeded inventory
+logged-in/add-item.spec.js         add item via the form (asserted in DB); + photo upload to Storage
 logged-in/sell-decrements-stock.spec.js  Sell 1 -> sale row + stock decrement (asserted in DB)
-.auth/artist.json                  generated session state (gitignored)
+logged-in/admin-route-guard.spec.js      artist on /admin -> bounced to /artist
+admin/admin-dashboard.spec.js      stats + seeded artist/items render; admin on /artist -> /admin
+admin/excel-export.spec.js         Export Excel -> downloads a workbook; figures asserted from the file
+.auth/artist.json                  generated artist session state (gitignored)
+.auth/admin.json                   generated admin session state (gitignored)
 ```
+
+> The sign-out test lives in `logged-out`, not `logged-in`, on purpose:
+> `supabase.auth.signOut()` is global, so signing out the shared test artist
+> would revoke the session every other logged-in test reuses. It signs in its
+> own throwaway artist instead.
+
+## Storage bucket
+
+The photo-upload path writes to a public Storage bucket named `item-images`.
+It's declared in `supabase/config.toml` (`[storage.buckets.item-images]`), so a
+fresh `supabase start` / `supabase db reset` provisions it. `auth.setup.js` also
+creates it idempotently via the service-role key, so the suite works against a
+stack that was already running before that config was added.
 
 ## Writing tests that change data
 
@@ -66,8 +105,11 @@ rerunnable. See `logged-in/sell-decrements-stock.spec.js`.
 ## Test data
 
 `auth.setup.js` creates the artist `table1@alley.local` (PIN `482134`) and two
-sample items via the service-role key. It's idempotent: reruns keep existing
-rows. For a completely clean slate (drops everything, re-applies migrations):
+sample items via the service-role key. `admin.setup.js` creates the admin
+`admin@alley.local` and flips its `is_admin` flag. Both are idempotent: reruns
+reuse the existing user (resetting the credential) and keep existing rows. The
+Excel test additionally creates and tears down its own throwaway artist each run.
+For a completely clean slate (drops everything, re-applies migrations):
 
 ```bash
 supabase db reset
