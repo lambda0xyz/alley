@@ -11,7 +11,6 @@
   --warning-text: #b45309;
   --warning-bg: #fffbeb;
   --warning-border: #fcd34d;
-  --muted-text: #a1a1aa;
   --muted-bg: #f4f4f5;
   --error: #ef4444;
   --focus-ring: rgba(24, 24, 27, 0.12);
@@ -34,7 +33,6 @@
     --warning-text: #f59e0b;
     --warning-bg: #1c1400;
     --warning-border: #713f12;
-    --muted-text: #52525b;
     --muted-bg: #27272a;
     --focus-ring: rgba(250, 250, 250, 0.12);
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -81,6 +79,14 @@ input {
   font-family: inherit;
   font-size: inherit;
   min-width: 0;
+}
+
+/* Keyboard focus ring for custom-styled buttons and links.
+   Inputs supply their own ring via .input:focus. */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
 }
 
 /* ===== PAGE LAYOUTS ===== */
@@ -248,7 +254,6 @@ input {
 .btn-signout {
   padding: 8px 14px;
   font-size: 0.875rem;
-  font-family: inherit;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -261,7 +266,6 @@ input {
   width: 100%;
   padding: 14px;
   font-size: 1rem;
-  font-family: inherit;
   font-weight: 500;
   border-radius: var(--radius);
   border: 1px dashed var(--border);
@@ -281,7 +285,6 @@ input {
   width: 100%;
   padding: 14px;
   font-size: 1rem;
-  font-family: inherit;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -359,7 +362,7 @@ input {
   font-weight: 600;
 }
 .text-soldout {
-  color: var(--muted-text);
+  color: var(--text-placeholder);
 }
 
 /* Link to switch between the artist and admin login pages */
@@ -410,7 +413,6 @@ input {
   padding: 20px;
   font-size: 1.4rem;
   font-weight: 500;
-  font-family: inherit;
   line-height: 1;
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -522,7 +524,6 @@ input {
   align-self: flex-start;
   padding: 4px 0;
   font-size: 0.8rem;
-  font-family: inherit;
   background: none;
   border: none;
   color: var(--text-muted);
@@ -560,7 +561,6 @@ input {
   align-self: flex-start;
   padding: 4px 0;
   font-size: 0.8rem;
-  font-family: inherit;
   background: none;
   border: none;
   color: var(--error);
@@ -641,7 +641,6 @@ input {
   border: none;
   cursor: pointer;
   text-align: left;
-  font-family: inherit;
   gap: 8px;
 }
 
@@ -694,7 +693,6 @@ input {
   width: 100%;
   background: none;
   border: none;
-  font-family: inherit;
   text-align: left;
   cursor: pointer;
   touch-action: manipulation;
