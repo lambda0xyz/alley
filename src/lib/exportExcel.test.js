@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { collectSales, buildLogAoa, buildSummaryAoa } from './exportExcel'
+import { describe, expect, it } from 'vitest'
+import { buildLogAoa, buildSummaryAoa, collectSales } from './exportExcel'
 
 // Minimal item shape: name, price, and the nested append-only sales rows.
 function item(name, price, sales) {
@@ -17,37 +17,68 @@ function untamperedItem(name, price, total, soldQtys) {
     notes: null,
   }))
   const netSold = soldQtys.reduce((s, q) => s + q, 0)
-  return { id: `item-${name}`, name, price, quantity_total: total, quantity_remaining: total - netSold, sales }
+  return {
+    id: `item-${name}`,
+    name,
+    price,
+    quantity_total: total,
+    quantity_remaining: total - netSold,
+    sales,
+  }
 }
 
 describe('collectSales', () => {
   it('flattens nested sales and sorts chronologically across items', () => {
     const items = [
       item('Print A', '10.00', [
-        { id: 's2', quantity_sold: 1, sold_at: '2026-06-14T12:00:00Z', notes: null },
+        {
+          id: 's2',
+          quantity_sold: 1,
+          sold_at: '2026-06-14T12:00:00Z',
+          notes: null,
+        },
       ]),
       item('Pin B', '5.00', [
-        { id: 's1', quantity_sold: 2, sold_at: '2026-06-14T09:00:00Z', notes: null },
-        { id: 's3', quantity_sold: 1, sold_at: '2026-06-14T15:00:00Z', notes: null },
+        {
+          id: 's1',
+          quantity_sold: 2,
+          sold_at: '2026-06-14T09:00:00Z',
+          notes: null,
+        },
+        {
+          id: 's3',
+          quantity_sold: 1,
+          sold_at: '2026-06-14T15:00:00Z',
+          notes: null,
+        },
       ]),
     ]
 
     const rows = collectSales(items, 'vincent')
 
-    expect(rows.map(r => r.saleId)).toEqual(['s1', 's2', 's3'])
-    expect(rows.every(r => r.artist === 'vincent')).toBe(true)
+    expect(rows.map((r) => r.saleId)).toEqual(['s1', 's2', 's3'])
+    expect(rows.every((r) => r.artist === 'vincent')).toBe(true)
     // price is coerced to a number for arithmetic
     expect(rows[0]).toMatchObject({ item: 'Pin B', qty: 2, price: 5 })
   })
 
   it('handles items with no sales', () => {
     expect(collectSales([item('Unsold', '3.00', [])])).toEqual([])
-    expect(collectSales([{ id: 'x', name: 'NoArr', price: '1.00' }])).toEqual([])
+    expect(collectSales([{ id: 'x', name: 'NoArr', price: '1.00' }])).toEqual(
+      [],
+    )
   })
 
   it('normalises missing notes to an empty string', () => {
     const rows = collectSales([
-      item('P', '1.00', [{ id: 's', quantity_sold: 1, sold_at: '2026-06-14T10:00:00Z', notes: null }]),
+      item('P', '1.00', [
+        {
+          id: 's',
+          quantity_sold: 1,
+          sold_at: '2026-06-14T10:00:00Z',
+          notes: null,
+        },
+      ]),
     ])
     expect(rows[0].notes).toBe('')
   })
@@ -55,8 +86,24 @@ describe('collectSales', () => {
 
 describe('buildLogAoa', () => {
   const sales = [
-    { soldAt: '2026-06-14T09:00:00Z', artist: 'vincent', item: 'Pin B', qty: 3, price: 5, notes: '', saleId: 's1' },
-    { soldAt: '2026-06-14T10:00:00Z', artist: 'vincent', item: 'Pin B', qty: -1, price: 5, notes: 'refund', saleId: 's2' },
+    {
+      soldAt: '2026-06-14T09:00:00Z',
+      artist: 'vincent',
+      item: 'Pin B',
+      qty: 3,
+      price: 5,
+      notes: '',
+      saleId: 's1',
+    },
+    {
+      soldAt: '2026-06-14T10:00:00Z',
+      artist: 'vincent',
+      item: 'Pin B',
+      qty: -1,
+      price: 5,
+      notes: 'refund',
+      saleId: 's2',
+    },
   ]
 
   it('marks negative quantities as corrections and positives as sales', () => {
@@ -76,8 +123,8 @@ describe('buildLogAoa', () => {
     // last row is TOTAL (preceded by a spacer row)
     const totalRow = aoa[aoa.length - 1]
     expect(totalRow[0]).toBe('TOTAL')
-    expect(totalRow[qtyIdx]).toBe(2)        // 3 + (-1)
-    expect(totalRow[totalIdx]).toBe(10)     // 15 + (-5)
+    expect(totalRow[qtyIdx]).toBe(2) // 3 + (-1)
+    expect(totalRow[totalIdx]).toBe(10) // 15 + (-5)
   })
 
   it('computes line totals per row (negative for corrections)', () => {
@@ -105,13 +152,20 @@ describe('buildLogAoa', () => {
 })
 
 describe('buildSummaryAoa', () => {
-  const header = ['Artist', 'Items', 'Total Brought', 'Total Sold', 'Remaining', 'Revenue']
+  const header = [
+    'Artist',
+    'Items',
+    'Total Brought',
+    'Total Sold',
+    'Remaining',
+    'Revenue',
+  ]
   const soldIdx = header.indexOf('Total Sold')
   const revenueIdx = header.indexOf('Revenue')
 
   // Legacy formula the Summary used before the fix (the mutable counters).
-  const legacySold = i => i.quantity_total - i.quantity_remaining
-  const legacyRevenue = a =>
+  const legacySold = (i) => i.quantity_total - i.quantity_remaining
+  const legacyRevenue = (a) =>
     a.items.reduce((s, i) => s + legacySold(i) * Number(i.price), 0)
 
   const artists = [
@@ -146,7 +200,9 @@ describe('buildSummaryAoa', () => {
 
     const totalRow = aoa[aoa.length - 1]
     const grandSold = artists.reduce(
-      (s, a) => s + a.items.reduce((x, i) => x + legacySold(i), 0), 0)
+      (s, a) => s + a.items.reduce((x, i) => x + legacySold(i), 0),
+      0,
+    )
     const grandRevenue = artists.reduce((s, a) => s + legacyRevenue(a), 0)
     expect(totalRow[0]).toBe('TOTAL')
     expect(totalRow[soldIdx]).toBe(grandSold)
@@ -155,10 +211,17 @@ describe('buildSummaryAoa', () => {
 
   it('reports the true ledger figure when the stock counter is tampered with', () => {
     // Attacker zeroes their reported sales: quantity_remaining = quantity_total.
-    const tampered = [{
-      display_name: 'vincent',
-      items: [{ ...untamperedItem('Print', '10.00', 50, [4]), quantity_remaining: 50 }],
-    }]
+    const tampered = [
+      {
+        display_name: 'vincent',
+        items: [
+          {
+            ...untamperedItem('Print', '10.00', 50, [4]),
+            quantity_remaining: 50,
+          },
+        ],
+      },
+    ]
     const row = buildSummaryAoa(tampered)[1]
     // Legacy formula would show 0 sold / 0 revenue here; the ledger holds the truth.
     expect(row[soldIdx]).toBe(4)

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { formatArtistName, formatSaleTime } from './format'
 
 describe('formatArtistName', () => {
@@ -25,7 +25,8 @@ describe('formatSaleTime', () => {
   })
 
   it('distinguishes different timestamps', () => {
-    expect(formatSaleTime('2026-06-10T14:32:00Z'))
-      .not.toBe(formatSaleTime('2026-06-11T09:00:00Z'))
+    expect(formatSaleTime('2026-06-10T14:32:00Z')).not.toBe(
+      formatSaleTime('2026-06-11T09:00:00Z'),
+    )
   })
 })

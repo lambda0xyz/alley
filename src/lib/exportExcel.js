@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx'
 import { formatArtistName, formatSaleTime } from './format'
-import { itemSold, itemRevenue, sumSold, sumRevenue } from './sales'
+import { itemRevenue, itemSold, sumRevenue, sumSold } from './sales'
 
 // Flatten the nested sales of a set of items into chronological log entries.
 // Each `sale` row is append-only; a negative quantity_sold is a correction.
@@ -30,7 +30,15 @@ export function collectSales(items, artistName) {
 export function buildLogAoa(sales, { includeArtist }) {
   const header = ['Time']
   if (includeArtist) header.push('Artist')
-  header.push('Item', 'Type', 'Qty', 'Unit Price', 'Line Total', 'Notes', 'Sale ID')
+  header.push(
+    'Item',
+    'Type',
+    'Qty',
+    'Unit Price',
+    'Line Total',
+    'Notes',
+    'Sale ID',
+  )
 
   const qtyIdx = header.indexOf('Qty')
   const totalIdx = header.indexOf('Line Total')
@@ -68,16 +76,16 @@ export function buildLogAoa(sales, { includeArtist }) {
 }
 
 function logColWidths({ includeArtist }) {
-  const cols = [{ wch: 16 }]                       // Time
-  if (includeArtist) cols.push({ wch: 18 })        // Artist
+  const cols = [{ wch: 16 }] // Time
+  if (includeArtist) cols.push({ wch: 18 }) // Artist
   cols.push(
-    { wch: 24 },  // Item
-    { wch: 11 },  // Type
-    { wch: 6 },   // Qty
-    { wch: 10 },  // Unit Price
-    { wch: 11 },  // Line Total
-    { wch: 30 },  // Notes
-    { wch: 38 },  // Sale ID
+    { wch: 24 }, // Item
+    { wch: 11 }, // Type
+    { wch: 6 }, // Qty
+    { wch: 10 }, // Unit Price
+    { wch: 11 }, // Line Total
+    { wch: 30 }, // Notes
+    { wch: 38 }, // Sale ID
   )
   return cols
 }
@@ -125,27 +133,29 @@ export function exportConventionReport(artists) {
   // --- Sheet 1: Summary ---
   const summarySheet = XLSX.utils.aoa_to_sheet(buildSummaryAoa(artists))
   summarySheet['!cols'] = [
-    { wch: 20 }, { wch: 8 }, { wch: 14 },
-    { wch: 12 }, { wch: 12 }, { wch: 12 }
+    { wch: 20 },
+    { wch: 8 },
+    { wch: 14 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 },
   ]
   XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary')
 
   // --- Sheet 2: Full Log (every sale across all artists, chronological) ---
-  const allSales = artists.flatMap(a =>
-    collectSales(a.items, formatArtistName(a.display_name))
+  const allSales = artists.flatMap((a) =>
+    collectSales(a.items, formatArtistName(a.display_name)),
   )
   allSales.sort((a, b) => new Date(a.soldAt) - new Date(b.soldAt))
   const fullLogSheet = XLSX.utils.aoa_to_sheet(
-    buildLogAoa(allSales, { includeArtist: true })
+    buildLogAoa(allSales, { includeArtist: true }),
   )
   fullLogSheet['!cols'] = logColWidths({ includeArtist: true })
   XLSX.utils.book_append_sheet(wb, fullLogSheet, 'Full Log')
 
   // --- Sheet per artist: breakdown + that artist's chronological log ---
   for (const artist of artists) {
-    const rows = [
-      ['Item', 'Price', 'Brought', 'Sold', 'Remaining', 'Revenue'],
-    ]
+    const rows = [['Item', 'Price', 'Brought', 'Sold', 'Remaining', 'Revenue']]
 
     for (const item of artist.items) {
       const sold = itemSold(item)
@@ -166,17 +176,27 @@ export function exportConventionReport(artists) {
 
     const sheet = XLSX.utils.aoa_to_sheet(rows)
     sheet['!cols'] = [
-      { wch: 20 }, { wch: 8 }, { wch: 10 },
-      { wch: 8 }, { wch: 12 }, { wch: 12 }
+      { wch: 20 },
+      { wch: 8 },
+      { wch: 10 },
+      { wch: 8 },
+      { wch: 12 },
+      { wch: 12 },
     ]
 
     // Append this artist's chronological log below the breakdown.
     const log = collectSales(artist.items)
-    const logAoa = [[], ['Sales Log'], ...buildLogAoa(log, { includeArtist: false })]
+    const logAoa = [
+      [],
+      ['Sales Log'],
+      ...buildLogAoa(log, { includeArtist: false }),
+    ]
     XLSX.utils.sheet_add_aoa(sheet, logAoa, { origin: -1 })
 
     // Sheet name max 31 chars, no special chars
-    const sheetName = artist.display_name.slice(0, 31).replace(/[\\/*?:[\]]/g, '')
+    const sheetName = artist.display_name
+      .slice(0, 31)
+      .replace(/[\\/*?:[\]]/g, '')
     XLSX.utils.book_append_sheet(wb, sheet, sheetName)
   }
 

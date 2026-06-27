@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useAdminData() {
@@ -41,9 +41,9 @@ export function useAdminData() {
     }
 
     // Group items under their artist
-    const artistMap = profiles.map(profile => ({
+    const artistMap = profiles.map((profile) => ({
       ...profile,
-      items: items.filter(item => item.artist_id === profile.id)
+      items: items.filter((item) => item.artist_id === profile.id),
     }))
 
     setArtists(artistMap)
@@ -52,7 +52,6 @@ export function useAdminData() {
 
   useEffect(() => {
     // Fetch-on-mount plus a realtime subscription; fetchAll owns its loading state.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll()
 
     // Real-time: re-fetch whenever items or sales change
@@ -62,12 +61,12 @@ export function useAdminData() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'items' },
-        () => fetchAll()
+        () => fetchAll(),
       )
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'sales' },
-        () => fetchAll()
+        () => fetchAll(),
       )
       .subscribe()
 

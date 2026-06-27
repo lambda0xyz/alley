@@ -16,7 +16,9 @@ const UPLOAD_ERROR = {
 // createImageBitmap with imageOrientation:'from-image' bakes in EXIF rotation,
 // so portrait phone shots don't come out sideways.
 async function compress(file) {
-  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+  const bitmap = await createImageBitmap(file, {
+    imageOrientation: 'from-image',
+  })
 
   const scale = Math.min(1, MAX_DIM / Math.max(bitmap.width, bitmap.height))
   const width = Math.round(bitmap.width * scale)
@@ -28,8 +30,8 @@ async function compress(file) {
   canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height)
   bitmap.close()
 
-  const blob = await new Promise(resolve =>
-    canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY)
+  const blob = await new Promise((resolve) =>
+    canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY),
   )
   // toBlob can yield null if the canvas is tainted/too large; fall back to the
   // original file so the upload still proceeds.
@@ -48,7 +50,10 @@ export async function uploadItemImage(file) {
     return { url: null, error: UPLOAD_ERROR }
   }
   if (!user) {
-    return { url: null, error: { message: 'Your session has expired — please sign in again.' } }
+    return {
+      url: null,
+      error: { message: 'Your session has expired — please sign in again.' },
+    }
   }
 
   try {

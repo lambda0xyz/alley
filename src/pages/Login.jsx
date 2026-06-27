@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react'
-import { Navigate, Link } from 'react-router-dom'
 import { Turnstile } from '@marsidev/react-turnstile'
+import { useRef, useState } from 'react'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { TURNSTILE_SITE_KEY } from '../lib/turnstile'
 
@@ -38,7 +38,7 @@ export default function Login() {
   }
 
   function handleBackspace() {
-    setPin(p => p.slice(0, -1))
+    setPin((p) => p.slice(0, -1))
     setError(null)
   }
 
@@ -79,13 +79,19 @@ export default function Login() {
         <h1 className="brand-title">alley</h1>
 
         {step === 'identifier' ? (
-          <form onSubmit={handleIdentifierSubmit} className="form-stack form-narrow">
-            <label className="form-label">Your name or table number</label>
+          <form
+            onSubmit={handleIdentifierSubmit}
+            className="form-stack form-narrow"
+          >
+            <label className="form-label" htmlFor="identifier">
+              Your name or table number
+            </label>
             <input
+              id="identifier"
               className="input input-center"
               type="text"
               value={identifier}
-              onChange={e => setIdentifier(e.target.value)}
+              onChange={(e) => setIdentifier(e.target.value)}
               placeholder="e.g. table1"
               autoCapitalize="none"
               autoCorrect="off"
@@ -98,15 +104,20 @@ export default function Login() {
             >
               Continue
             </button>
-            <Link to="/admin/login" className="auth-switch">…or go to Admin Login</Link>
+            <Link to="/admin/login" className="auth-switch">
+              …or go to Admin Login
+            </Link>
           </form>
         ) : (
           <div className="pin-wrap">
-            <p className="form-label">PIN for <strong>{identifier}</strong></p>
+            <p className="form-label">
+              PIN for <strong>{identifier}</strong>
+            </p>
 
             <div className="pin-dots">
               {Array.from({ length: PIN_LENGTH }).map((_, i) => (
                 <div
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length presentational dots, never reordered
                   key={i}
                   className={`pin-dot${i < pin.length ? ' pin-dot-filled' : ''}`}
                 />
@@ -116,9 +127,10 @@ export default function Login() {
             {error && <p className="text-error">{error}</p>}
 
             <div className="pin-pad">
-              {[1,2,3,4,5,6,7,8,9].map(n => (
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
                 <button
                   key={n}
+                  type="button"
                   className="pin-btn"
                   onClick={() => handlePinDigit(String(n))}
                   disabled={pin.length === PIN_LENGTH || submitting}
@@ -126,8 +138,11 @@ export default function Login() {
                   {n}
                 </button>
               ))}
-              <button className="pin-btn" onClick={handleBack}>←</button>
+              <button type="button" className="pin-btn" onClick={handleBack}>
+                ←
+              </button>
               <button
+                type="button"
                 className="pin-btn"
                 onClick={() => handlePinDigit('0')}
                 disabled={pin.length === PIN_LENGTH || submitting}
@@ -135,6 +150,7 @@ export default function Login() {
                 0
               </button>
               <button
+                type="button"
                 className="pin-btn"
                 onClick={handleBackspace}
                 disabled={!pin.length || submitting}

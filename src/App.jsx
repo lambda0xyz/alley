@@ -1,10 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
-import Login from './pages/Login'
-import ArtistDashboard from './pages/ArtistDashboard'
+import { AuthProvider } from './context/AuthContext'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminLogin from './pages/AdminLogin'
+import ArtistDashboard from './pages/ArtistDashboard'
+import Login from './pages/Login'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -15,17 +15,23 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
 
-          <Route path="/artist" element={
-            <ProtectedRoute>
-              <ArtistDashboard />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/artist"
+            element={
+              <ProtectedRoute>
+                <ArtistDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/admin" element={
-            <ProtectedRoute adminOnly>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           <Route path="/admin/login" element={<AdminLogin />} />
 

@@ -16,7 +16,7 @@ export default function AddItemForm({ onAdd, onCancel }) {
   function handleFileChange(e) {
     const file = e.target.files?.[0] ?? null
     setImageFile(file)
-    setPreviewUrl(prev => {
+    setPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return file ? URL.createObjectURL(file) : null
     })
@@ -44,7 +44,7 @@ export default function AddItemForm({ onAdd, onCancel }) {
     const { error } = await onAdd({
       name: name.trim(),
       price: Math.round(parseFloat(price) * 100) / 100,
-      quantity_total: parseInt(quantity),
+      quantity_total: parseInt(quantity, 10),
       image_url,
     })
 
@@ -61,7 +61,7 @@ export default function AddItemForm({ onAdd, onCancel }) {
         className="input"
         placeholder="Item name"
         value={name}
-        onChange={e => setName(e.target.value)}
+        onChange={(e) => setName(e.target.value)}
         required
         autoFocus
       />
@@ -73,7 +73,7 @@ export default function AddItemForm({ onAdd, onCancel }) {
           min="0"
           step="0.01"
           value={price}
-          onChange={e => setPrice(e.target.value)}
+          onChange={(e) => setPrice(e.target.value)}
           required
         />
         <input
@@ -83,13 +83,17 @@ export default function AddItemForm({ onAdd, onCancel }) {
           min="1"
           step="1"
           value={quantity}
-          onChange={e => setQuantity(e.target.value)}
+          onChange={(e) => setQuantity(e.target.value)}
           required
         />
       </div>
       <PhotoPicker label="Photo (optional)" onChange={handleFileChange} />
       {previewUrl && (
-        <img className="item-thumb item-thumb-preview" src={previewUrl} alt="Preview" />
+        <img
+          className="item-thumb item-thumb-preview"
+          src={previewUrl}
+          alt="Preview"
+        />
       )}
       {error && <p className="text-error">{error}</p>}
       <div className="form-row">

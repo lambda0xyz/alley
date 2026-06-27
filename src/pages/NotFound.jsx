@@ -7,7 +7,8 @@ export default function NotFound() {
         <div className="card">
           <h2>Page not found</h2>
           <p className="text-muted">
-            That page doesn’t exist. It may have moved, or the link was mistyped.
+            That page doesn’t exist. It may have moved, or the link was
+            mistyped.
           </p>
           <Link to="/login" className="btn btn-primary btn-full">
             Back to login

@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useAdminData } from '../hooks/useAdminData'
-import { sumSold, sumRevenue } from '../lib/sales'
-import AdminArtistCard from '../components/AdminArtistCard'
 import ActivityLog from '../components/ActivityLog'
+import AdminArtistCard from '../components/AdminArtistCard'
 import SignOutButton from '../components/SignOutButton'
+import { useAdminData } from '../hooks/useAdminData'
+import { sumRevenue, sumSold } from '../lib/sales'
 
 export default function AdminDashboard() {
   const { artists, loading, error } = useAdminData()
@@ -26,8 +26,14 @@ export default function AdminDashboard() {
 
   // Figures come from the append-only sales ledger, not the mutable
   // quantity_total - quantity_remaining counters. See src/lib/sales.js.
-  const totalRevenue = artists.reduce((sum, artist) => sum + sumRevenue(artist.items), 0)
-  const totalSold = artists.reduce((sum, artist) => sum + sumSold(artist.items), 0)
+  const totalRevenue = artists.reduce(
+    (sum, artist) => sum + sumRevenue(artist.items),
+    0,
+  )
+  const totalSold = artists.reduce(
+    (sum, artist) => sum + sumSold(artist.items),
+    0,
+  )
 
   if (loading) return <div className="loading">Loading…</div>
   if (error) return <div className="loading">Error: {error}</div>
@@ -57,12 +63,13 @@ export default function AdminDashboard() {
       <ActivityLog artists={artists} />
 
       <div className="artist-list">
-        {artists.map(artist => (
+        {artists.map((artist) => (
           <AdminArtistCard key={artist.id} artist={artist} />
         ))}
       </div>
 
       <button
+        type="button"
         className="btn btn-ghost btn-full"
         onClick={handleExport}
         disabled={exporting}

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { itemSold, itemRevenue, sumSold, sumRevenue } from './sales'
+import { describe, expect, it } from 'vitest'
+import { itemRevenue, itemSold, sumRevenue, sumSold } from './sales'
 
 // An *untampered* item: the stock counter agrees with the ledger exactly as the
 // sales trigger maintains it (quantity_remaining = quantity_total - net sold).
@@ -23,8 +23,8 @@ function untamperedItem(name, price, total, soldQtys) {
 }
 
 // The legacy formulas the report used before the fix — the mutable counters.
-const legacySold = i => i.quantity_total - i.quantity_remaining
-const legacyRevenue = i => legacySold(i) * Number(i.price)
+const legacySold = (i) => i.quantity_total - i.quantity_remaining
+const legacyRevenue = (i) => legacySold(i) * Number(i.price)
 
 describe('itemSold / itemRevenue', () => {
   it('sums the ledger, netting corrections (negative rows)', () => {
@@ -51,8 +51,8 @@ describe('sumSold / sumRevenue', () => {
       untamperedItem('A', '10.00', 50, [3]),
       untamperedItem('B', '5.00', 20, [4, -1]),
     ]
-    expect(sumSold(items)).toBe(6)       // 3 + 3
-    expect(sumRevenue(items)).toBe(45)   // 30 + 15
+    expect(sumSold(items)).toBe(6) // 3 + 3
+    expect(sumRevenue(items)).toBe(45) // 30 + 15
   })
 })
 
@@ -63,7 +63,7 @@ describe('parity with the legacy counter formula on untampered data', () => {
   const items = [
     untamperedItem('Print', '10.00', 50, [3, 2, -1]),
     untamperedItem('Pin', '5.00', 100, [10]),
-    untamperedItem('Sticker', '2.50', 30, []),       // nothing sold
+    untamperedItem('Sticker', '2.50', 30, []), // nothing sold
     untamperedItem('Charm', '7.00', 12, [5, -2, 1]), // with corrections
   ]
 
@@ -88,8 +88,8 @@ describe('tamper-resistance (the regression the fix prevents)', () => {
     // Attack: PATCH quantity_remaining = quantity_total to zero out reported sales.
     const tampered = { ...item, quantity_remaining: item.quantity_total }
 
-    expect(legacySold(tampered)).toBe(0)   // counter now lies
-    expect(itemSold(tampered)).toBe(4)     // ledger still tells the truth
+    expect(legacySold(tampered)).toBe(0) // counter now lies
+    expect(itemSold(tampered)).toBe(4) // ledger still tells the truth
     expect(itemRevenue(tampered)).toBe(40)
   })
 

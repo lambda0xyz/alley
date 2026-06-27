@@ -58,7 +58,9 @@ to a fresh Supabase project to recreate the tables, triggers, and row-level secu
 | `npm run preview` | Preview the production build locally |
 | `npm test` | Run the test suite once (Vitest) |
 | `npm run test:watch` | Run tests in watch mode |
-| `npm run lint` | Lint with ESLint |
+| `npm run lint` | Lint & format check with Biome |
+| `npm run lint:fix` | Apply safe Biome lint/format fixes |
+| `npm run format` | Format files with Biome |
 | `npm run deploy` | Build and deploy to Cloudflare Workers |
 
 ## Project structure

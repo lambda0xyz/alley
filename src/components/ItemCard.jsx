@@ -4,7 +4,13 @@ import PhotoPicker from './PhotoPicker'
 
 const LOW_STOCK_THRESHOLD = 2
 
-export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) {
+export default function ItemCard({
+  item,
+  onSell,
+  onCorrect,
+  onEdit,
+  onDelete,
+}) {
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState(null)
   const [showQuantityPicker, setShowQuantityPicker] = useState(false)
@@ -87,7 +93,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
 
   function clearEditPreview() {
     setEditImageFile(null)
-    setEditPreviewUrl(prev => {
+    setEditPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return null
     })
@@ -96,7 +102,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
   function handleEditFileChange(e) {
     const file = e.target.files?.[0] ?? null
     setEditImageFile(file)
-    setEditPreviewUrl(prev => {
+    setEditPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return file ? URL.createObjectURL(file) : null
     })
@@ -191,7 +197,9 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
     'card',
     outOfStock && !formOpen && 'card-soldout',
     lowStock && 'card-warning',
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <div className={cardClass}>
@@ -216,12 +224,13 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
       </div>
 
       <div className="item-stock">
-        {outOfStock
-          ? <span className="text-soldout">sold out</span>
-          : <span className={lowStock ? 'text-warning' : 'text-muted'}>
-              {item.quantity_remaining} left
-            </span>
-        }
+        {outOfStock ? (
+          <span className="text-soldout">sold out</span>
+        ) : (
+          <span className={lowStock ? 'text-warning' : 'text-muted'}>
+            {item.quantity_remaining} left
+          </span>
+        )}
         <span className="text-muted">{item.quantity_total} total</span>
       </div>
 
@@ -234,7 +243,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
             type="text"
             placeholder="Item name"
             value={editName}
-            onChange={e => setEditName(e.target.value)}
+            onChange={(e) => setEditName(e.target.value)}
             autoFocus
           />
           <div className="form-row">
@@ -248,7 +257,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
                 inputMode="decimal"
                 placeholder="Price"
                 value={priceLocked ? Number(item.price).toFixed(2) : editPrice}
-                onChange={e => setEditPrice(e.target.value)}
+                onChange={(e) => setEditPrice(e.target.value)}
                 disabled={priceLocked}
               />
             </label>
@@ -262,7 +271,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
                 inputMode="numeric"
                 placeholder="Total qty"
                 value={editQty}
-                onChange={e => setEditQty(e.target.value)}
+                onChange={(e) => setEditQty(e.target.value)}
               />
             </label>
           </div>
@@ -286,7 +295,12 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
             <button className="btn btn-primary" type="submit" disabled={busy}>
               {busy ? '…' : 'Save changes'}
             </button>
-            <button className="btn btn-ghost" type="button" onClick={closeEdit} disabled={busy}>
+            <button
+              className="btn btn-ghost"
+              type="button"
+              onClick={closeEdit}
+              disabled={busy}
+            >
               Cancel
             </button>
           </div>
@@ -341,7 +355,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
             inputMode="numeric"
             placeholder={`Quantity to remove (max ${soldCount})`}
             value={correctQty}
-            onChange={e => setCorrectQty(e.target.value)}
+            onChange={(e) => setCorrectQty(e.target.value)}
             autoFocus
           />
           <input
@@ -349,7 +363,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
             type="text"
             placeholder="Reason (optional)"
             value={correctNote}
-            onChange={e => setCorrectNote(e.target.value)}
+            onChange={(e) => setCorrectNote(e.target.value)}
           />
           <div className="form-row">
             <button className="btn btn-primary" type="submit" disabled={busy}>
@@ -366,22 +380,25 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
         </form>
       ) : (
         <>
-          {!outOfStock && (
-            showQuantityPicker ? (
+          {!outOfStock &&
+            (showQuantityPicker ? (
               <div className="item-qty-row">
-                {[2, 3, 4, 5].map(n => (
-                  n <= item.quantity_remaining && (
-                    <button
-                      key={n}
-                      className="btn btn-ghost btn-qty"
-                      onClick={() => handleSell(n)}
-                      disabled={busy}
-                    >
-                      ×{n}
-                    </button>
-                  )
-                ))}
+                {[2, 3, 4, 5].map(
+                  (n) =>
+                    n <= item.quantity_remaining && (
+                      <button
+                        key={n}
+                        type="button"
+                        className="btn btn-ghost btn-qty"
+                        onClick={() => handleSell(n)}
+                        disabled={busy}
+                      >
+                        ×{n}
+                      </button>
+                    ),
+                )}
                 <button
+                  type="button"
                   className="btn btn-ghost btn-qty"
                   onClick={() => setShowQuantityPicker(false)}
                 >
@@ -391,6 +408,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
             ) : (
               <div className="item-actions">
                 <button
+                  type="button"
                   className="btn btn-primary btn-sell"
                   onClick={() => handleSell(1)}
                   disabled={busy}
@@ -398,6 +416,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
                   {busy ? '…' : 'Sell 1'}
                 </button>
                 <button
+                  type="button"
                   className="btn btn-ghost"
                   onClick={() => setShowQuantityPicker(true)}
                   disabled={busy || item.quantity_remaining < 2}
@@ -405,12 +424,12 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
                   Sell more
                 </button>
               </div>
-            )
-          )}
+            ))}
 
           {!showQuantityPicker && (
             <div className="item-edit-row">
               <button
+                type="button"
                 className="btn-correct"
                 onClick={openEdit}
                 disabled={busy}
@@ -419,8 +438,12 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
               </button>
               {soldCount > 0 && (
                 <button
+                  type="button"
                   className="btn-correct"
-                  onClick={() => { setShowCorrection(true); setActionError(null) }}
+                  onClick={() => {
+                    setShowCorrection(true)
+                    setActionError(null)
+                  }}
                   disabled={busy}
                 >
                   Submit correction
@@ -432,6 +455,7 @@ export default function ItemCard({ item, onSell, onCorrect, onEdit, onDelete }) 
       )}
 
       {showImage && item.image_url && (
+        // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard close is handled by the window Escape listener above
         <div
           className="lightbox"
           role="dialog"

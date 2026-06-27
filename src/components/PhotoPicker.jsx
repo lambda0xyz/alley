@@ -20,10 +20,18 @@ export default function PhotoPicker({ label, onChange }) {
     <div className="field">
       <span className="field-label">{label}</span>
       <div className="form-row">
-        <button type="button" className="btn btn-ghost" onClick={() => open(false)}>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => open(false)}
+        >
           Choose file
         </button>
-        <button type="button" className="btn btn-ghost" onClick={() => open(true)}>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => open(true)}
+        >
           Take photo
         </button>
       </div>

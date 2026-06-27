@@ -24,9 +24,11 @@ export default class ErrorBoundary extends Component {
           <div className="card">
             <h2>Something went wrong</h2>
             <p className="text-muted">
-              An unexpected error stopped this page from loading. Reloading usually fixes it.
+              An unexpected error stopped this page from loading. Reloading
+              usually fixes it.
             </p>
             <button
+              type="button"
               className="btn btn-primary btn-full"
               onClick={() => window.location.reload()}
             >

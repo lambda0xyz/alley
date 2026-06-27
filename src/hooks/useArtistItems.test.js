@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // These tests exercise the money-and-inventory invariants through the hook's
 // public API (call sellItem/editItem/etc, assert state + return value), so
@@ -16,18 +16,34 @@ const { handlers, getUserMock, supabaseMock } = vi.hoisted(() => {
   const makeBuilder = (table) => {
     const ctx = { table, op: null }
     const builder = {
-      select: vi.fn(() => { if (!ctx.op) ctx.op = 'select'; return builder }),
-      insert: vi.fn(() => { ctx.op = 'insert'; return builder }),
-      update: vi.fn(() => { ctx.op = 'update'; return builder }),
-      delete: vi.fn(() => { ctx.op = 'delete'; return builder }),
+      select: vi.fn(() => {
+        if (!ctx.op) ctx.op = 'select'
+        return builder
+      }),
+      insert: vi.fn(() => {
+        ctx.op = 'insert'
+        return builder
+      }),
+      update: vi.fn(() => {
+        ctx.op = 'update'
+        return builder
+      }),
+      delete: vi.fn(() => {
+        ctx.op = 'delete'
+        return builder
+      }),
       order: vi.fn(() => builder),
       eq: vi.fn(() => builder),
       single: vi.fn(() => builder),
+      // biome-ignore lint/suspicious/noThenProperty: intentional thenable — mirrors Supabase's awaitable query builder
       then: (resolve, reject) => {
         const key = `${ctx.table}.${ctx.op}`
         const handler = handlers[key]
         if (!handler) {
-          return Promise.reject(new Error(`No mock handler for ${key}`)).then(resolve, reject)
+          return Promise.reject(new Error(`No mock handler for ${key}`)).then(
+            resolve,
+            reject,
+          )
         }
         return Promise.resolve().then(handler).then(resolve, reject)
       },
@@ -78,7 +94,10 @@ describe('useArtistItems — load', () => {
   })
 
   it('surfaces a fetch error in error state', async () => {
-    handlers['items.select'] = () => ({ data: null, error: { message: 'boom' } })
+    handlers['items.select'] = () => ({
+      data: null,
+      error: { message: 'boom' },
+    })
     const { result } = renderHook(() => useArtistItems())
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBe('boom')
@@ -90,7 +109,9 @@ describe('useArtistItems — sales', () => {
     const { result } = await renderLoaded([item({ quantity_remaining: 10 })])
     handlers['sales.insert'] = () => ({ error: null })
 
-    await act(async () => { await result.current.sellItem('1', 3) })
+    await act(async () => {
+      await result.current.sellItem('1', 3)
+    })
 
     expect(result.current.items[0].quantity_remaining).toBe(7)
   })
@@ -100,7 +121,9 @@ describe('useArtistItems — sales', () => {
     handlers['sales.insert'] = () => ({ error: { message: 'nope' } })
 
     let res
-    await act(async () => { res = await result.current.sellItem('1', 3) })
+    await act(async () => {
+      res = await result.current.sellItem('1', 3)
+    })
 
     expect(res.error.message).toBe('nope')
     expect(result.current.items[0].quantity_remaining).toBe(10)
@@ -108,10 +131,14 @@ describe('useArtistItems — sales', () => {
 
   it('rolls back when the insert rejects (network down)', async () => {
     const { result } = await renderLoaded([item({ quantity_remaining: 10 })])
-    handlers['sales.insert'] = () => { throw new Error('offline') }
+    handlers['sales.insert'] = () => {
+      throw new Error('offline')
+    }
 
     let res
-    await act(async () => { res = await result.current.sellItem('1', 2) })
+    await act(async () => {
+      res = await result.current.sellItem('1', 2)
+    })
 
     expect(res.error.message).toMatch(/check your connection/i)
     expect(result.current.items[0].quantity_remaining).toBe(10)
@@ -121,7 +148,9 @@ describe('useArtistItems — sales', () => {
     const { result } = await renderLoaded([item({ quantity_remaining: 5 })])
     handlers['sales.insert'] = () => ({ error: null })
 
-    await act(async () => { await result.current.correctItem('1', 2, 'miscount') })
+    await act(async () => {
+      await result.current.correctItem('1', 2, 'miscount')
+    })
 
     expect(result.current.items[0].quantity_remaining).toBe(7)
   })
@@ -130,11 +159,17 @@ describe('useArtistItems — sales', () => {
 describe('useArtistItems — edit', () => {
   it('rejects an edit that drops total below already-sold', async () => {
     // sold = 10 - 3 = 7
-    const { result } = await renderLoaded([item({ quantity_total: 10, quantity_remaining: 3 })])
+    const { result } = await renderLoaded([
+      item({ quantity_total: 10, quantity_remaining: 3 }),
+    ])
 
     let res
     await act(async () => {
-      res = await result.current.editItem('1', { name: 'x', price: 9, quantity_total: 2 })
+      res = await result.current.editItem('1', {
+        name: 'x',
+        price: 9,
+        quantity_total: 2,
+      })
     })
 
     expect(res.error.message).toMatch(/below the 7/)
@@ -143,11 +178,17 @@ describe('useArtistItems — edit', () => {
 
   it('locks price once something has sold, but still allows total to grow', async () => {
     // sold = 7, so price must stay at 5
-    const { result } = await renderLoaded([item({ price: 5, quantity_total: 10, quantity_remaining: 3 })])
+    const { result } = await renderLoaded([
+      item({ price: 5, quantity_total: 10, quantity_remaining: 3 }),
+    ])
     handlers['items.update'] = () => ({ error: null })
 
     await act(async () => {
-      await result.current.editItem('1', { name: 'Sticker', price: 99, quantity_total: 12 })
+      await result.current.editItem('1', {
+        name: 'Sticker',
+        price: 99,
+        quantity_total: 12,
+      })
     })
 
     expect(result.current.items[0].price).toBe(5)
@@ -161,7 +202,9 @@ describe('useArtistItems — delete', () => {
     handlers['items.delete'] = () => ({ error: { code: '23503' } })
 
     let res
-    await act(async () => { res = await result.current.deleteItem('1') })
+    await act(async () => {
+      res = await result.current.deleteItem('1')
+    })
 
     expect(res.error.message).toMatch(/has sales/)
     expect(result.current.items).toHaveLength(1) // restored
@@ -175,7 +218,11 @@ describe('useArtistItems — add', () => {
 
     let res
     await act(async () => {
-      res = await result.current.addItem({ name: 'New', price: 5, quantity_total: 4 })
+      res = await result.current.addItem({
+        name: 'New',
+        price: 5,
+        quantity_total: 4,
+      })
     })
 
     expect(res.error.message).toMatch(/session has expired/i)
@@ -184,7 +231,10 @@ describe('useArtistItems — add', () => {
 
   it('appends the new item on success', async () => {
     const { result } = await renderLoaded([])
-    handlers['items.insert'] = () => ({ data: item({ id: '2', name: 'New' }), error: null })
+    handlers['items.insert'] = () => ({
+      data: item({ id: '2', name: 'New' }),
+      error: null,
+    })
 
     await act(async () => {
       await result.current.addItem({ name: 'New', price: 5, quantity_total: 4 })

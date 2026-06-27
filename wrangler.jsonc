@@ -8,9 +8,7 @@
   "assets": {
     "not_found_handling": "single-page-application"
   },
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   // Named environment for the dev deployment. The top-level config above is the
   // production worker (`alley`); `--env dev` deploys the same build to the
   // `alley-dev` worker. compatibility_date/flags, observability, and assets are

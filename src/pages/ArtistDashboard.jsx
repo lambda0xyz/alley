@@ -1,14 +1,23 @@
 import { useState } from 'react'
+import AddItemForm from '../components/AddItemForm'
+import ItemCard from '../components/ItemCard'
+import SignOutButton from '../components/SignOutButton'
 import { useAuth } from '../context/AuthContext'
 import { useArtistItems } from '../hooks/useArtistItems'
 import { formatArtistName } from '../lib/format'
-import ItemCard from '../components/ItemCard'
-import AddItemForm from '../components/AddItemForm'
-import SignOutButton from '../components/SignOutButton'
 
 export default function ArtistDashboard() {
   const { profile } = useAuth()
-  const { items, loading, error, sellItem, correctItem, editItem, deleteItem, addItem } = useArtistItems()
+  const {
+    items,
+    loading,
+    error,
+    sellItem,
+    correctItem,
+    editItem,
+    deleteItem,
+    addItem,
+  } = useArtistItems()
   const [showAddForm, setShowAddForm] = useState(false)
 
   async function handleAddItem(fields) {
@@ -23,24 +32,39 @@ export default function ArtistDashboard() {
   return (
     <div className="page">
       <div className="app-header">
-        <span className="app-header-name">{formatArtistName(profile?.display_name)}</span>
+        <span className="app-header-name">
+          {formatArtistName(profile?.display_name)}
+        </span>
         <SignOutButton />
       </div>
 
       <div className="item-list">
-        {items.map(item => (
-          <ItemCard key={item.id} item={item} onSell={sellItem} onCorrect={correctItem} onEdit={editItem} onDelete={deleteItem} />
+        {items.map((item) => (
+          <ItemCard
+            key={item.id}
+            item={item}
+            onSell={sellItem}
+            onCorrect={correctItem}
+            onEdit={editItem}
+            onDelete={deleteItem}
+          />
         ))}
       </div>
 
-      {showAddForm
-        ? <AddItemForm onAdd={handleAddItem} onCancel={() => setShowAddForm(false)} />
-        : (
-          <button className="btn-dashed" onClick={() => setShowAddForm(true)}>
-            + Add item
-          </button>
-        )
-      }
+      {showAddForm ? (
+        <AddItemForm
+          onAdd={handleAddItem}
+          onCancel={() => setShowAddForm(false)}
+        />
+      ) : (
+        <button
+          type="button"
+          className="btn-dashed"
+          onClick={() => setShowAddForm(true)}
+        >
+          + Add item
+        </button>
+      )}
     </div>
   )
 }

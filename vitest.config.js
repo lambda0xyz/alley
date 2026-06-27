@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vitest/config'
 
 // Separate from vite.config.js on purpose: the Cloudflare plugin is build/deploy
 // tooling and has no place in the test run.

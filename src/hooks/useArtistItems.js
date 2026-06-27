@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 // Returned when an await rejects outright (network down, client misconfigured)
@@ -34,7 +34,6 @@ export function useArtistItems() {
   useEffect(() => {
     // Fetch-on-mount: fetchItems owns its own loading/error state. The synchronous
     // setLoading(true) is intentional, not a cascading-render bug.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchItems()
   }, [fetchItems])
 
@@ -43,11 +42,14 @@ export function useArtistItems() {
   // correction (stock back up). The DB trigger does remaining - quantity_sold,
   // so the optimistic math here mirrors it.
   async function recordSale(itemId, quantitySold, notes = null) {
-    const applyDelta = delta => setItems(prev => prev.map(item =>
-      item.id === itemId
-        ? { ...item, quantity_remaining: item.quantity_remaining + delta }
-        : item
-    ))
+    const applyDelta = (delta) =>
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId
+            ? { ...item, quantity_remaining: item.quantity_remaining + delta }
+            : item,
+        ),
+      )
 
     applyDelta(-quantitySold) // optimistic
 
@@ -86,15 +88,20 @@ export function useArtistItems() {
   // has already sold. Price is locked once anything has sold, because sales
   // don't snapshot price: editing it would retroactively rewrite past revenue.
   async function editItem(itemId, fields) {
-    const item = items.find(i => i.id === itemId)
+    const item = items.find((i) => i.id === itemId)
     if (!item) return { error: { message: 'Item not found' } }
 
     const soldCount = item.quantity_total - item.quantity_remaining
     const newTotal = fields.quantity_total
-    const newRemaining = item.quantity_remaining + (newTotal - item.quantity_total)
+    const newRemaining =
+      item.quantity_remaining + (newTotal - item.quantity_total)
 
     if (newRemaining < 0) {
-      return { error: { message: `Total can't be below the ${soldCount} already sold` } }
+      return {
+        error: {
+          message: `Total can't be below the ${soldCount} already sold`,
+        },
+      }
     }
 
     const updates = {
@@ -110,8 +117,11 @@ export function useArtistItems() {
       updates.image_url = fields.image_url
     }
 
-    const rollback = () => setItems(prev => prev.map(i => (i.id === itemId ? item : i)))
-    setItems(prev => prev.map(i => (i.id === itemId ? { ...i, ...updates } : i)))
+    const rollback = () =>
+      setItems((prev) => prev.map((i) => (i.id === itemId ? item : i)))
+    setItems((prev) =>
+      prev.map((i) => (i.id === itemId ? { ...i, ...updates } : i)),
+    )
 
     let result
     try {
@@ -134,7 +144,7 @@ export function useArtistItems() {
   // We surface that as a friendly message rather than the raw constraint error.
   async function deleteItem(itemId) {
     const prev = items
-    setItems(prevItems => prevItems.filter(i => i.id !== itemId))
+    setItems((prevItems) => prevItems.filter((i) => i.id !== itemId))
 
     let result
     try {
@@ -149,7 +159,10 @@ export function useArtistItems() {
       const blockedBySales = result.error.code === '23503'
       return {
         error: blockedBySales
-          ? { message: "Can't delete an item that has sales — use a correction instead" }
+          ? {
+              message:
+                "Can't delete an item that has sales — use a correction instead",
+            }
           : result.error,
       }
     }
@@ -160,11 +173,17 @@ export function useArtistItems() {
   async function addItem(fields) {
     let result
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       // Session can expire between page load and submit; without this guard
       // user.id would throw and surface as a silent rejection.
       if (!user) {
-        return { error: { message: 'Your session has expired — please sign in again.' } }
+        return {
+          error: {
+            message: 'Your session has expired — please sign in again.',
+          },
+        }
       }
 
       result = await supabase
@@ -172,7 +191,7 @@ export function useArtistItems() {
         .insert({
           ...fields,
           artist_id: user.id,
-          quantity_remaining: fields.quantity_total
+          quantity_remaining: fields.quantity_total,
         })
         .select()
         .single()
@@ -181,9 +200,19 @@ export function useArtistItems() {
     }
 
     if (result.error) return { error: result.error }
-    setItems(prev => [...prev, result.data])
+    setItems((prev) => [...prev, result.data])
     return { error: null }
   }
 
-  return { items, loading, error, sellItem, correctItem, editItem, deleteItem, addItem, refetch: fetchItems }
+  return {
+    items,
+    loading,
+    error,
+    sellItem,
+    correctItem,
+    editItem,
+    deleteItem,
+    addItem,
+    refetch: fetchItems,
+  }
 }

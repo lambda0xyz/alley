@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react'
-import { Navigate, Link } from 'react-router-dom'
 import { Turnstile } from '@marsidev/react-turnstile'
+import { useRef, useState } from 'react'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { TURNSTILE_SITE_KEY } from '../lib/turnstile'
 
@@ -44,7 +44,7 @@ export default function AdminLogin() {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
             autoFocus
           />
@@ -53,7 +53,7 @@ export default function AdminLogin() {
             type="password"
             placeholder="Password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
           {error && <p className="text-error">{error}</p>}
@@ -71,7 +71,9 @@ export default function AdminLogin() {
           >
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>
-          <Link to="/login" className="auth-switch">…or go to Artist Login</Link>
+          <Link to="/login" className="auth-switch">
+            …or go to Artist Login
+          </Link>
         </form>
       </div>
     </div>
