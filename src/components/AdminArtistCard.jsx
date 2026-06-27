@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { formatArtistName, formatSaleTime } from '../lib/format'
+import { formatArtistName, formatMoney, formatSaleTime } from '../lib/format'
 import { itemRevenue, itemSold, sumRevenue, sumSold } from '../lib/sales'
+import { stockStatus } from '../lib/stock'
 import SaleQty from './SaleQty'
 
 function computeStats(items) {
@@ -42,7 +43,7 @@ export default function AdminArtistCard({ artist }) {
         </span>
         <div className="artist-header-stats">
           <span className="artist-stat">
-            <strong>RON {totalRevenue.toFixed(2)}</strong>
+            <strong>{formatMoney(totalRevenue)}</strong>
             <small> revenue</small>
           </span>
           <span className="artist-stat">
@@ -65,13 +66,7 @@ export default function AdminArtistCard({ artist }) {
             artist.items.map((item) => {
               const sold = itemSold(item)
               const revenue = itemRevenue(item)
-              const outOfStock = item.quantity_remaining === 0
-              const lowStock = item.quantity_remaining <= 2 && !outOfStock
-              const remainingClass = outOfStock
-                ? 'text-soldout'
-                : lowStock
-                  ? 'text-warning'
-                  : 'text-muted'
+              const { remainingClass } = stockStatus(item)
 
               // Newest sale first. Only rows with history are expandable.
               const sales = [...(item.sales || [])].sort(
@@ -85,12 +80,12 @@ export default function AdminArtistCard({ artist }) {
                   <div className="artist-item-left">
                     <span className="artist-item-name">{item.name}</span>
                     <span className="artist-item-price">
-                      RON {Number(item.price).toFixed(2)}
+                      {formatMoney(item.price)}
                     </span>
                   </div>
                   <div className="artist-item-right">
                     <span className="artist-item-revenue">
-                      RON {revenue.toFixed(2)}
+                      {formatMoney(revenue)}
                     </span>
                     <span className="artist-item-sold">{sold} sold</span>
                     <span className={`artist-item-remaining ${remainingClass}`}>

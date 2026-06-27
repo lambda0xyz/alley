@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useImagePicker } from '../hooks/useImagePicker'
+import { formatMoney } from '../lib/format'
+import { stockStatus } from '../lib/stock'
 import { uploadItemImage } from '../lib/uploadImage'
 import PhotoPicker from './PhotoPicker'
-
-const LOW_STOCK_THRESHOLD = 2
 
 export default function ItemCard({
   item,
@@ -41,8 +41,7 @@ export default function ItemCard({
     return () => window.removeEventListener('keydown', onKey)
   }, [showImage])
 
-  const outOfStock = item.quantity_remaining === 0
-  const lowStock = item.quantity_remaining <= LOW_STOCK_THRESHOLD && !outOfStock
+  const { outOfStock, lowStock } = stockStatus(item)
 
   // How many units have been sold so far — the most a correction can reverse
   // without pushing remaining back above the original total (qty_check).
@@ -208,7 +207,7 @@ export default function ItemCard({
       )}
       <div className="item-info">
         <span className="item-name">{item.name}</span>
-        <span className="item-price">RON {Number(item.price).toFixed(2)}</span>
+        <span className="item-price">{formatMoney(item.price)}</span>
       </div>
 
       <div className="item-stock">

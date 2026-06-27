@@ -3,6 +3,7 @@ import ActivityLog from '../components/ActivityLog'
 import AdminArtistCard from '../components/AdminArtistCard'
 import SignOutButton from '../components/SignOutButton'
 import { useAdminData } from '../hooks/useAdminData'
+import { formatMoney } from '../lib/format'
 import { sumRevenue, sumSold } from '../lib/sales'
 
 export default function AdminDashboard() {
@@ -47,7 +48,7 @@ export default function AdminDashboard() {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <span className="stat-value">RON {totalRevenue.toFixed(2)}</span>
+          <span className="stat-value">{formatMoney(totalRevenue)}</span>
           <span className="stat-label">Total revenue</span>
         </div>
         <div className="stat-card">
