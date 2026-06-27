@@ -188,6 +188,238 @@ export default function ItemCard({
     .filter(Boolean)
     .join(' ')
 
+  // The card body has three mutually exclusive modes — edit, correction, or the
+  // default sell actions. Each is rendered by a named helper below so the main
+  // return reads as a simple three-way switch instead of one giant ternary.
+
+  function renderEditForm() {
+    return (
+      <form className="item-correction" onSubmit={handleEdit}>
+        <input
+          className="input"
+          type="text"
+          placeholder="Item name"
+          value={editName}
+          onChange={(e) => setEditName(e.target.value)}
+          autoFocus
+        />
+        <div className="form-row">
+          <label className="field">
+            <span className="field-label">Price</span>
+            <input
+              className="input"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              placeholder="Price"
+              value={priceLocked ? Number(item.price).toFixed(2) : editPrice}
+              onChange={(e) => setEditPrice(e.target.value)}
+              disabled={priceLocked}
+            />
+          </label>
+          <label className="field">
+            <span className="field-label">Total qty</span>
+            <input
+              className="input"
+              type="number"
+              min={Math.max(soldCount, 1)}
+              step="1"
+              inputMode="numeric"
+              placeholder="Total qty"
+              value={editQty}
+              onChange={(e) => setEditQty(e.target.value)}
+            />
+          </label>
+        </div>
+        {priceLocked && (
+          <p className="text-muted item-edit-hint">
+            Price is locked — {soldCount} already sold
+          </p>
+        )}
+        <PhotoPicker
+          label={item.image_url ? 'Replace photo' : 'Add photo'}
+          onChange={handleEditFileChange}
+        />
+        {(editPreviewUrl || item.image_url) && (
+          <img
+            className="item-thumb item-thumb-preview"
+            src={editPreviewUrl || item.image_url}
+            alt="Preview"
+          />
+        )}
+        <div className="form-row">
+          <button className="btn btn-primary" type="submit" disabled={busy}>
+            {busy ? '…' : 'Save changes'}
+          </button>
+          <button
+            className="btn btn-ghost"
+            type="button"
+            onClick={closeEdit}
+            disabled={busy}
+          >
+            Cancel
+          </button>
+        </div>
+
+        <div className="item-delete">
+          {confirmDelete ? (
+            <>
+              <p className="item-edit-hint">Delete “{item.name}” for good?</p>
+              <div className="form-row">
+                <button
+                  className="btn btn-danger"
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={busy}
+                >
+                  {busy ? '…' : 'Yes, delete'}
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={busy}
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          ) : canDelete ? (
+            <button
+              className="btn-delete"
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              disabled={busy}
+            >
+              Delete item
+            </button>
+          ) : (
+            <p className="text-muted item-edit-hint">
+              Can't delete — {soldCount} already sold
+            </p>
+          )}
+        </div>
+      </form>
+    )
+  }
+
+  function renderCorrectionForm() {
+    return (
+      <form className="item-correction" onSubmit={handleCorrect}>
+        <input
+          className="input"
+          type="number"
+          min="1"
+          max={soldCount}
+          step="1"
+          inputMode="numeric"
+          placeholder={`Quantity to remove (max ${soldCount})`}
+          value={correctQty}
+          onChange={(e) => setCorrectQty(e.target.value)}
+          autoFocus
+        />
+        <input
+          className="input"
+          type="text"
+          placeholder="Reason (optional)"
+          value={correctNote}
+          onChange={(e) => setCorrectNote(e.target.value)}
+        />
+        <div className="form-row">
+          <button className="btn btn-primary" type="submit" disabled={busy}>
+            {busy ? '…' : 'Submit correction'}
+          </button>
+          <button
+            className="btn btn-ghost"
+            type="button"
+            onClick={closeCorrection}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    )
+  }
+
+  function renderSellActions() {
+    return (
+      <>
+        {!outOfStock &&
+          (showQuantityPicker ? (
+            <div className="item-qty-row">
+              {[2, 3, 4, 5].map(
+                (n) =>
+                  n <= item.quantity_remaining && (
+                    <button
+                      key={n}
+                      type="button"
+                      className="btn btn-ghost btn-qty"
+                      onClick={() => handleSell(n)}
+                      disabled={busy}
+                    >
+                      ×{n}
+                    </button>
+                  ),
+              )}
+              <button
+                type="button"
+                className="btn btn-ghost btn-qty"
+                onClick={() => setShowQuantityPicker(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <div className="item-actions">
+              <button
+                type="button"
+                className="btn btn-primary btn-sell"
+                onClick={() => handleSell(1)}
+                disabled={busy}
+              >
+                {busy ? '…' : 'Sell 1'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setShowQuantityPicker(true)}
+                disabled={busy || item.quantity_remaining < 2}
+              >
+                Sell more
+              </button>
+            </div>
+          ))}
+
+        {!showQuantityPicker && (
+          <div className="item-edit-row">
+            <button
+              type="button"
+              className="btn-correct"
+              onClick={openEdit}
+              disabled={busy}
+            >
+              Edit
+            </button>
+            {soldCount > 0 && (
+              <button
+                type="button"
+                className="btn-correct"
+                onClick={() => {
+                  setShowCorrection(true)
+                  setActionError(null)
+                }}
+                disabled={busy}
+              >
+                Submit correction
+              </button>
+            )}
+          </div>
+        )}
+      </>
+    )
+  }
+
   return (
     <div className={cardClass}>
       {item.image_url && (
@@ -223,223 +455,11 @@ export default function ItemCard({
 
       {actionError && <p className="text-error">{actionError}</p>}
 
-      {showEdit ? (
-        <form className="item-correction" onSubmit={handleEdit}>
-          <input
-            className="input"
-            type="text"
-            placeholder="Item name"
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            autoFocus
-          />
-          <div className="form-row">
-            <label className="field">
-              <span className="field-label">Price</span>
-              <input
-                className="input"
-                type="number"
-                min="0"
-                step="0.01"
-                inputMode="decimal"
-                placeholder="Price"
-                value={priceLocked ? Number(item.price).toFixed(2) : editPrice}
-                onChange={(e) => setEditPrice(e.target.value)}
-                disabled={priceLocked}
-              />
-            </label>
-            <label className="field">
-              <span className="field-label">Total qty</span>
-              <input
-                className="input"
-                type="number"
-                min={Math.max(soldCount, 1)}
-                step="1"
-                inputMode="numeric"
-                placeholder="Total qty"
-                value={editQty}
-                onChange={(e) => setEditQty(e.target.value)}
-              />
-            </label>
-          </div>
-          {priceLocked && (
-            <p className="text-muted item-edit-hint">
-              Price is locked — {soldCount} already sold
-            </p>
-          )}
-          <PhotoPicker
-            label={item.image_url ? 'Replace photo' : 'Add photo'}
-            onChange={handleEditFileChange}
-          />
-          {(editPreviewUrl || item.image_url) && (
-            <img
-              className="item-thumb item-thumb-preview"
-              src={editPreviewUrl || item.image_url}
-              alt="Preview"
-            />
-          )}
-          <div className="form-row">
-            <button className="btn btn-primary" type="submit" disabled={busy}>
-              {busy ? '…' : 'Save changes'}
-            </button>
-            <button
-              className="btn btn-ghost"
-              type="button"
-              onClick={closeEdit}
-              disabled={busy}
-            >
-              Cancel
-            </button>
-          </div>
-
-          <div className="item-delete">
-            {confirmDelete ? (
-              <>
-                <p className="item-edit-hint">Delete “{item.name}” for good?</p>
-                <div className="form-row">
-                  <button
-                    className="btn btn-danger"
-                    type="button"
-                    onClick={handleDelete}
-                    disabled={busy}
-                  >
-                    {busy ? '…' : 'Yes, delete'}
-                  </button>
-                  <button
-                    className="btn btn-ghost"
-                    type="button"
-                    onClick={() => setConfirmDelete(false)}
-                    disabled={busy}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            ) : canDelete ? (
-              <button
-                className="btn-delete"
-                type="button"
-                onClick={() => setConfirmDelete(true)}
-                disabled={busy}
-              >
-                Delete item
-              </button>
-            ) : (
-              <p className="text-muted item-edit-hint">
-                Can't delete — {soldCount} already sold
-              </p>
-            )}
-          </div>
-        </form>
-      ) : showCorrection ? (
-        <form className="item-correction" onSubmit={handleCorrect}>
-          <input
-            className="input"
-            type="number"
-            min="1"
-            max={soldCount}
-            step="1"
-            inputMode="numeric"
-            placeholder={`Quantity to remove (max ${soldCount})`}
-            value={correctQty}
-            onChange={(e) => setCorrectQty(e.target.value)}
-            autoFocus
-          />
-          <input
-            className="input"
-            type="text"
-            placeholder="Reason (optional)"
-            value={correctNote}
-            onChange={(e) => setCorrectNote(e.target.value)}
-          />
-          <div className="form-row">
-            <button className="btn btn-primary" type="submit" disabled={busy}>
-              {busy ? '…' : 'Submit correction'}
-            </button>
-            <button
-              className="btn btn-ghost"
-              type="button"
-              onClick={closeCorrection}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      ) : (
-        <>
-          {!outOfStock &&
-            (showQuantityPicker ? (
-              <div className="item-qty-row">
-                {[2, 3, 4, 5].map(
-                  (n) =>
-                    n <= item.quantity_remaining && (
-                      <button
-                        key={n}
-                        type="button"
-                        className="btn btn-ghost btn-qty"
-                        onClick={() => handleSell(n)}
-                        disabled={busy}
-                      >
-                        ×{n}
-                      </button>
-                    ),
-                )}
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-qty"
-                  onClick={() => setShowQuantityPicker(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <div className="item-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sell"
-                  onClick={() => handleSell(1)}
-                  disabled={busy}
-                >
-                  {busy ? '…' : 'Sell 1'}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => setShowQuantityPicker(true)}
-                  disabled={busy || item.quantity_remaining < 2}
-                >
-                  Sell more
-                </button>
-              </div>
-            ))}
-
-          {!showQuantityPicker && (
-            <div className="item-edit-row">
-              <button
-                type="button"
-                className="btn-correct"
-                onClick={openEdit}
-                disabled={busy}
-              >
-                Edit
-              </button>
-              {soldCount > 0 && (
-                <button
-                  type="button"
-                  className="btn-correct"
-                  onClick={() => {
-                    setShowCorrection(true)
-                    setActionError(null)
-                  }}
-                  disabled={busy}
-                >
-                  Submit correction
-                </button>
-              )}
-            </div>
-          )}
-        </>
-      )}
+      {showEdit
+        ? renderEditForm()
+        : showCorrection
+          ? renderCorrectionForm()
+          : renderSellActions()}
 
       {showImage && item.image_url && (
         // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard close is handled by the window Escape listener above
