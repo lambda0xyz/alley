@@ -18,6 +18,6 @@
   // compatibility_date/flags, observability, and assets are inherited from the
   // top level — only the worker name differs.
   "env": {
-    "dev": {}
+    "dev": {"name": "alley-dev"}
   }
 }
