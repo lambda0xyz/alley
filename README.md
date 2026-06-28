@@ -84,6 +84,10 @@ Two layers, kept separate:
   npm run test:e2e
   ```
 
+The end-to-end suite runs in CI on every push to `main` and on pull requests, via GitHub
+Actions ([`.github/workflows/e2e.yml`](.github/workflows/e2e.yml)) — it boots a local
+Supabase stack and runs Playwright, so no secrets are needed.
+
 See [`e2e/README.md`](e2e/README.md) for the full guide — auth setup, test data, and how
 the projects are wired.
 

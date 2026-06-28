@@ -32,6 +32,23 @@ npx playwright codegen localhost:5173   # click through the app; it writes a tes
 Playwright boots the app itself via `npm run dev:test` (`vite --mode test`), so
 you don't need a dev server running — but `supabase start` must be up.
 
+## CI
+
+`.github/workflows/e2e.yml` runs this suite on every push to `main` and on pull
+requests. The job mirrors the local flow: install deps, `npx playwright install
+--with-deps chromium`, install the Supabase CLI, `supabase start` (Docker is
+preinstalled on the `ubuntu-latest` runner), then `npm run test:e2e`. The
+Playwright HTML report is uploaded as a build artifact.
+
+No GitHub secrets are required — the keys in `.env.test` and `local-supabase.js`
+are the committed local-dev ones. Playwright's CI behaviour (`forbidOnly`, two
+retries, a fresh `vite --mode test` server) switches on automatically because
+GitHub sets `CI=true`.
+
+This is independent of Cloudflare's auto-deploy, which builds and ships on push
+regardless. To require green tests before code lands, protect `main` and mark the
+`e2e` check as required, then merge via PR.
+
 ## How it's wired
 
 The app normally points at the cloud Supabase project. In test mode,
