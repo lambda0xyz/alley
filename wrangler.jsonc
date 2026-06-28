@@ -11,13 +11,14 @@
   "compatibility_flags": ["nodejs_compat"],
   // Named environment for the dev deployment. The top-level config above is the
   // production worker (`alley`); `--env dev` deploys the same build to the
-  // `alley-dev` worker. Wrangler derives that name from the top-level `name`
-  // plus the `-dev` env suffix, so no explicit `name` is set here — hard-coding
-  // it as `alley-dev` trips Cloudflare Workers Builds' name-conflict autofix,
-  // which then opens an `update_worker_name_to_alley-dev` PR on every build.
-  // compatibility_date/flags, observability, and assets are inherited from the
-  // top level — only the worker name differs.
+  // `alley-dev` worker. Keep the explicit `name` — Cloudflare Workers Builds'
+  // pre-build name check matches env.dev.name literally against the connected
+  // `alley-dev` Worker; an empty `{}` makes the build bot open an
+  // `update_worker_name_to_alley-dev` PR to add it back. compatibility_date/flags,
+  // observability, and assets are inherited from the top level — only the name differs.
   "env": {
-    "dev": {}
+    "dev": {
+      "name": "alley-dev"
+    }
   }
 }
