@@ -17,12 +17,8 @@
   // `update_worker_name_to_alley-dev` PR to add it back. compatibility_date/flags,
   // observability, and assets are inherited from the top level — only the name differs.
   "env": {
-<<<<<<< HEAD
     "dev": {
       "name": "alley-dev"
     }
-=======
-    "dev": {"name": "alley-dev"}
->>>>>>> 7c7e66415dcdcd9c641589d5aa2cd610b086b236
   }
 }
