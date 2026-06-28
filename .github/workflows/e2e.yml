@@ -1,0 +1,55 @@
+name: E2E
+
+# Playwright end-to-end suite. Runs against a local Supabase stack + the Vite
+# dev server in test mode, exactly like `npm run test:e2e` does locally. All
+# credentials it uses are the committed local-dev keys (.env.test,
+# e2e/local-supabase.js), so no GitHub secrets are required.
+#
+# This is separate from Cloudflare's auto-deploy: Cloudflare still builds and
+# ships on push, this job just gives you a pass/fail signal you can require
+# before merging (Settings -> Branches -> require the "e2e" check).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright (Chromium only — the suite is mobile-Chromium)
+        run: npx playwright install --with-deps chromium
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Boots Postgres + Auth + Storage and applies supabase/migrations/.
+      # Docker is preinstalled on ubuntu-latest runners.
+      - name: Start Supabase
+        run: supabase start
+
+      # Playwright boots `npm run dev:test` itself (reuseExistingServer is off
+      # under CI), so we don't start the dev server here.
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
