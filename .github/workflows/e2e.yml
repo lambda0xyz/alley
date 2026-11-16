@@ -32,9 +32,12 @@ jobs:
       - name: Install Playwright (Chromium only — the suite is mobile-Chromium)
         run: npx playwright install --with-deps chromium
 
+      # Pinned (not `latest`): newer CLIs reject the [inbucket] section in
+      # supabase/config.toml (renamed to [local_smtp]). Keep in sync with the
+      # local CLI; migrate config.toml before bumping.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.106.0
 
       # Boots Postgres + Auth + Storage and applies supabase/migrations/.
       # Docker is preinstalled on ubuntu-latest runners.
