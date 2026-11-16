@@ -68,9 +68,26 @@ export function useAdminData() {
         { event: 'INSERT', schema: 'public', table: 'sales' },
         () => fetchAll(),
       )
-      .subscribe()
+      // Realtime does not replay events missed while disconnected (tab
+      // backgrounded, phone locked, venue WiFi drop), so resync on every
+      // (re)subscribe. The first SUBSCRIBED duplicates the mount fetch; harmless.
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') fetchAll()
+      })
 
-    return () => supabase.removeChannel(channel)
+    // Belt and braces: browsers throttle/kill background sockets, so also
+    // resync when the tab becomes visible again or the network comes back.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') fetchAll()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('online', fetchAll)
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('online', fetchAll)
+      supabase.removeChannel(channel)
+    }
   }, [fetchAll])
 
   return { artists, loading, error, refetch: fetchAll }
