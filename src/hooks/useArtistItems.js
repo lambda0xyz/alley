@@ -12,9 +12,10 @@ const CONNECTION_ERROR = {
 // the optimistic state change and returns its own rollback; `run` is the async
 // Supabase call. On a thrown rejection (network down) or a returned { error },
 // we roll back and surface the error; optional `mapError` rewrites a returned
-// error (e.g. a constraint code) into a friendlier message. Always resolves to
-// the app-wide { error } shape.
-async function optimisticWrite({ apply, run, mapError }) {
+// error (e.g. a constraint code) into a friendlier message. Optional
+// `onSuccess` receives the confirmed server result. Always resolves to the
+// app-wide { error } shape.
+async function optimisticWrite({ apply, run, mapError, onSuccess }) {
   const rollback = apply()
 
   let result
@@ -30,13 +31,30 @@ async function optimisticWrite({ apply, run, mapError }) {
     return { error: mapError ? mapError(result.error) : result.error }
   }
 
+  onSuccess?.(result)
   return { error: null }
+}
+
+// Columns for the "last transaction" banner. Embeds the item name so a
+// confirmed insert and the on-mount fetch produce the same shape.
+const LAST_SALE_COLUMNS =
+  'id, item_id, quantity_sold, sold_at, notes, items(name)'
+
+// Keep whichever sale the server stamped later — two quick taps can confirm
+// out of order on flaky WiFi, and the banner must not regress to the older one.
+function newerSale(prev, next) {
+  if (!prev) return next
+  return new Date(next.sold_at) >= new Date(prev.sold_at) ? next : prev
 }
 
 export function useArtistItems() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  // Most recent sale/correction as CONFIRMED by the server (never optimistic):
+  // set from the insert's returned row, or fetched on mount so it survives a
+  // reload. Lets the artist see at a glance that a tap actually went through.
+  const [lastSale, setLastSale] = useState(null)
 
   const fetchItems = useCallback(async () => {
     setLoading(true)
@@ -62,6 +80,28 @@ export function useArtistItems() {
     fetchItems()
   }, [fetchItems])
 
+  useEffect(() => {
+    // Best-effort: the banner is a nicety, so a failure here stays silent
+    // rather than blocking the dashboard. RLS scopes sales to own items.
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('sales')
+          .select(LAST_SALE_COLUMNS)
+          .order('sold_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (!cancelled && data) setLastSale((prev) => newerSale(prev, data))
+      } catch {
+        // ignore — banner just stays empty until the next confirmed sale
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   // Records a sale row and optimistically adjusts the displayed stock.
   // A positive quantity_sold is a sale (stock down); a negative one is a
   // correction (stock back up). The DB trigger does remaining - quantity_sold,
@@ -84,7 +124,12 @@ export function useArtistItems() {
       run: () =>
         supabase
           .from('sales')
-          .insert({ item_id: itemId, quantity_sold: quantitySold, notes }),
+          .insert({ item_id: itemId, quantity_sold: quantitySold, notes })
+          .select(LAST_SALE_COLUMNS)
+          .single(),
+      onSuccess: ({ data }) => {
+        if (data) setLastSale((prev) => newerSale(prev, data))
+      },
     })
   }
 
@@ -205,6 +250,7 @@ export function useArtistItems() {
     items,
     loading,
     error,
+    lastSale,
     sellItem,
     correctItem,
     editItem,

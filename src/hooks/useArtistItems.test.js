@@ -35,6 +35,8 @@ const { handlers, getUserMock, supabaseMock } = vi.hoisted(() => {
       order: vi.fn(() => builder),
       eq: vi.fn(() => builder),
       single: vi.fn(() => builder),
+      limit: vi.fn(() => builder),
+      maybeSingle: vi.fn(() => builder),
       // biome-ignore lint/suspicious/noThenProperty: intentional thenable — mirrors Supabase's awaitable query builder
       then: (resolve, reject) => {
         const key = `${ctx.table}.${ctx.op}`
@@ -153,6 +155,83 @@ describe('useArtistItems — sales', () => {
     })
 
     expect(result.current.items[0].quantity_remaining).toBe(7)
+  })
+})
+
+describe('useArtistItems — last transaction', () => {
+  const saleRow = (over = {}) => ({
+    id: 's1',
+    item_id: '1',
+    quantity_sold: 1,
+    sold_at: '2026-11-20T12:00:00Z',
+    notes: null,
+    items: { name: 'Sticker' },
+    ...over,
+  })
+
+  it('loads the latest confirmed sale on mount', async () => {
+    handlers['sales.select'] = () => ({ data: saleRow(), error: null })
+    const { result } = await renderLoaded([item()])
+    await waitFor(() => expect(result.current.lastSale?.id).toBe('s1'))
+  })
+
+  it('stays empty (and the dashboard still loads) if that fetch fails', async () => {
+    handlers['sales.select'] = () => {
+      throw new Error('offline')
+    }
+    const { result } = await renderLoaded([item()])
+    expect(result.current.error).toBeNull()
+    expect(result.current.lastSale).toBeNull()
+  })
+
+  it('updates only from the row the server returns', async () => {
+    const { result } = await renderLoaded([item()])
+    handlers['sales.insert'] = () => ({
+      data: saleRow({ id: 's2', quantity_sold: 2 }),
+      error: null,
+    })
+
+    await act(async () => {
+      await result.current.sellItem('1', 2)
+    })
+
+    expect(result.current.lastSale).toMatchObject({
+      id: 's2',
+      quantity_sold: 2,
+      items: { name: 'Sticker' },
+    })
+  })
+
+  it('is not touched by a failed sale (not optimistic)', async () => {
+    handlers['sales.select'] = () => ({ data: saleRow(), error: null })
+    const { result } = await renderLoaded([item()])
+    await waitFor(() => expect(result.current.lastSale?.id).toBe('s1'))
+    handlers['sales.insert'] = () => ({ data: null, error: { message: 'no' } })
+
+    await act(async () => {
+      await result.current.sellItem('1', 1)
+    })
+
+    expect(result.current.lastSale.id).toBe('s1')
+  })
+
+  it('keeps the newer sale when confirmations arrive out of order', async () => {
+    handlers['sales.select'] = () => ({
+      data: saleRow({ id: 'new', sold_at: '2026-11-20T12:05:00Z' }),
+      error: null,
+    })
+    const { result } = await renderLoaded([item()])
+    await waitFor(() => expect(result.current.lastSale?.id).toBe('new'))
+    handlers['sales.insert'] = () => ({
+      data: saleRow({ id: 'old', sold_at: '2026-11-20T12:01:00Z' }),
+      error: null,
+    })
+
+    await act(async () => {
+      await result.current.sellItem('1', 1)
+    })
+
+    expect(result.current.lastSale.id).toBe('new')
   })
 })
 

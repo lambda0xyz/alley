@@ -24,3 +24,16 @@ export function formatSaleTime(iso) {
     minute: '2-digit',
   })
 }
+
+// Time for the artist's "last transaction" banner. Same-day sales show a
+// seconds-precise clock time ("14:32:05") so back-to-back taps on the same
+// item are distinguishable; older ones fall back to formatSaleTime's date+time.
+export function formatTransactionTime(iso, now = new Date()) {
+  const d = new Date(iso)
+  if (d.toDateString() !== now.toDateString()) return formatSaleTime(iso)
+  return d.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
+}

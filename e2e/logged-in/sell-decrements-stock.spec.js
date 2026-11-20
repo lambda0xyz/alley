@@ -35,6 +35,10 @@ test('selling an item decrements stock server-side via the DB trigger', async ({
     // the DB so we also wait out the async write before moving on.
     await expect.poll(() => stockOf(itemId), { timeout: 10_000 }).toBe(6)
 
+    // The "last transaction" banner is fed only by the server-returned row, so
+    // its appearance proves insert().select() round-tripped through RLS.
+    await expect(page.locator('.last-tx')).toContainText(`Sold 1 × ${name}`)
+
     // And exactly one sale row was recorded against the item.
     const { count } = await admin
       .from('sales')

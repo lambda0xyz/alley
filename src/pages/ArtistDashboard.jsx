@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AddItemForm from '../components/AddItemForm'
 import ItemCard from '../components/ItemCard'
+import LastTransaction from '../components/LastTransaction'
 import SignOutButton from '../components/SignOutButton'
 import { useAuth } from '../context/AuthContext'
 import { useArtistItems } from '../hooks/useArtistItems'
@@ -12,6 +13,7 @@ export default function ArtistDashboard() {
     items,
     loading,
     error,
+    lastSale,
     sellItem,
     correctItem,
     editItem,
@@ -37,6 +39,8 @@ export default function ArtistDashboard() {
         </span>
         <SignOutButton />
       </div>
+
+      <LastTransaction sale={lastSale} />
 
       <div className="item-list">
         {items.map((item) => (

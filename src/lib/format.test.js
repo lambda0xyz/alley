@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { formatArtistName, formatMoney, formatSaleTime } from './format'
+import {
+  formatArtistName,
+  formatMoney,
+  formatSaleTime,
+  formatTransactionTime,
+} from './format'
 
 describe('formatArtistName', () => {
   it('strips the internal @alley.local domain', () => {
@@ -45,5 +50,19 @@ describe('formatSaleTime', () => {
     expect(formatSaleTime('2026-06-10T14:32:00Z')).not.toBe(
       formatSaleTime('2026-06-11T09:00:00Z'),
     )
+  })
+})
+
+describe('formatTransactionTime', () => {
+  const now = new Date(2026, 10, 20, 15, 0, 0)
+
+  it('shows a seconds-precise clock time for a same-day sale', () => {
+    const iso = new Date(2026, 10, 20, 14, 32, 5).toISOString()
+    expect(formatTransactionTime(iso, now)).toMatch(/32.05/)
+  })
+
+  it('falls back to date+time for an earlier day', () => {
+    const iso = new Date(2026, 10, 19, 14, 32, 5).toISOString()
+    expect(formatTransactionTime(iso, now)).toBe(formatSaleTime(iso))
   })
 })

@@ -848,3 +848,52 @@ a:focus-visible {
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+/* ===== LAST TRANSACTION (artist) ===== */
+/* Sticky so it stays readable while scrolling to an item further down. */
+.last-tx {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.last-tx-inner {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  animation: last-tx-flash 1.2s ease-out;
+}
+
+.last-tx-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.last-tx-body {
+  font-size: 0.95rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+@keyframes last-tx-flash {
+  from {
+    background: var(--focus-ring);
+  }
+  to {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .last-tx-inner {
+    animation: none;
+  }
+}
